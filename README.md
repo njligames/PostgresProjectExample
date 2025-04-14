@@ -1,5 +1,18 @@
 # PostgreSQL Example Project
 
+## VERSION
+v1.0.0 - Initial MVP.
+
+## Create Release
+```bash
+ VERSION=v1.0.0
+ git add .
+ git commit -m "Release ${VERSION}"
+ git push
+ git tag -a ${VERSION} -m "Release ${VERSION}"
+ git push origin ${VERSION}
+```
+
 This project demonstrates how to connect to a PostgreSQL database using C++ and `libpq`.
 
 ## Prerequisites
