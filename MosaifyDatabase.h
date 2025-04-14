@@ -4,6 +4,7 @@
 
 #include <string>
 #include <libpq-fe.h>
+#include <vector>
 
 #ifndef MYPROJECT_DATABASE_H
 #define MYPROJECT_DATABASE_H
