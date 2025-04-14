@@ -7,6 +7,7 @@
 #include <libpq-fe.h>
 #include <vector>
 #include <sstream>
+#include <cstring>
 
 namespace NJLIC {
     bool MosaifyDatabase::executeSQL(PGconn* conn, const std::string &sql, std::string &error_message) {
