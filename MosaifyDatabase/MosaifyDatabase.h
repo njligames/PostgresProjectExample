@@ -10,7 +10,7 @@
 
 namespace NJLIC {
 
-    class Database {
+    class MosaifyDatabase {
     private:
         PGconn* m_conn;
 
@@ -32,10 +32,10 @@ namespace NJLIC {
         static bool deleteImage(PGconn* conn, int image_id, std::string &error_message);
 
     public:
-        static bool executeSQL(const Database &db, const std::string &sql, std::string &error_message);
+        static bool executeSQL(const MosaifyDatabase &db, const std::string &sql, std::string &error_message);
 
-        Database();
-        ~Database();
+        MosaifyDatabase();
+        ~MosaifyDatabase();
 
         bool connect(const std::string connectionString, std::string &error_message);
         void disconnect();

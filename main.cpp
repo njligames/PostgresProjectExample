@@ -1,7 +1,8 @@
 #include <iostream>
 #include <cstdlib>  // For std::getenv
 #include <vector>
-#include "Database.h"
+//#include "Database.h"
+#include "MosaifyDatabase/MosaifyDatabase.h"
 
 int main(int argc, char* argv[]) {
     std::string error_msg;
@@ -12,7 +13,7 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    NJLIC::Database *db = new NJLIC::Database();
+    NJLIC::MosaifyDatabase *db = new NJLIC::MosaifyDatabase();
 
     if(!db->connect(conninfo, error_msg)) {
         std::cerr << error_msg;
