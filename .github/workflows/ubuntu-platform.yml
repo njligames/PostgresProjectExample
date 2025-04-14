@@ -1,0 +1,53 @@
+name: Ubuntu
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+env:
+  BUILD_TYPE: Release
+  
+jobs:
+  update_submodule:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Install Postgres
+        run: sudo apt update && sudo apt install libpq-dev
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: true # Make sure to check out the sub-module
+
+      - name: Update submodule
+        run: |
+          git submodule update --init --recursive
+          git submodule update --remote --recursive
+
+      - name: Check if changes were made
+        id: check_changes
+        run: |
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "No changes were made."
+          else
+            echo "Changes were made."
+            git config user.email "actions@github.com"
+            git config user.name "GitHub Actions - update submodules"
+            git add .
+            git commit -m 'Update submodule'
+            git push
+          fi
+          
+      - name: Configure CMake
+        run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+        
+      - name: Build
+        run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+  
+      # - name: Test
+      #   working-directory: ${{github.workspace}}/build
+      #   run: ctest -C ${{env.BUILD_TYPE}}
+        
