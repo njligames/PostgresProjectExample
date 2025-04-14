@@ -1,0 +1,71 @@
+# PostgreSQL Example Project
+
+This project demonstrates how to connect to a PostgreSQL database using C++ and `libpq`.
+
+## Prerequisites
+
+- **C++ Compiler**: Supports C++14 or later.
+- **CMake**: Version 3.10 or later.
+- **PostgreSQL**: Installed and running.
+- **libpq**: PostgreSQL client library.
+
+### Installation
+
+#### macOS
+
+```bash
+brew install postgresql
+```
+
+#### Ubuntu
+```bash
+sudo apt-get update
+sudo apt-get install libpq-dev
+```
+
+### Setup
+#### Clone the Repository:
+```bash
+git clone https://github.com/yourusername/postgresql-example.git
+cd postgresql-example
+```
+
+#### Set Environment Variable:
+```bash
+export DB_CONN_STRING="dbname=mydatabase user=yourusername password=yourpassword hostaddr=127.0.0.1 port=5432"
+```
+
+#### Build the Project:
+```bash
+export DB_CONN_STRING="dbname=mydatabase user=yourusername password=yourpassword hostaddr=127.0.0.1 port=5432"
+mkdir build
+cd build
+cmake ..
+make
+```
+
+### Usage
+Reset Tables:
+```bash
+./PostgreSQLExample --reset
+```
+
+Create Tables:
+```bash
+./PostgreSQLExample
+```
+
+### Notes
+Security: Store credentials securely.
+Error Handling: Basic error handling included.
+License
+MIT License.
+
+### Contact
+For questions, contact yourname@domain.com.
+
+### Customization
+
+- **Repository URL**: Replace `https://github.com/yourusername/postgresql-example.git` with your actual repository URL.
+- **Contact Information**: Update the email address with your actual contact information.
+

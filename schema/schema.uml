@@ -1,0 +1,29 @@
+@startuml
+
+class usertable {
+    +id: SERIAL
+    +email: VARCHAR
+    +first_name: VARCHAR
+    +last_name: VARCHAR
+}
+
+class projecttable {
+    +id: SERIAL
+    +user_id: INT
+    +project_name: VARCHAR
+}
+
+class images {
+    +id: SERIAL
+    +project_id: INT
+    +filename: VARCHAR
+    +rows: INT
+    +cols: INT
+    +comps: INT
+    +data: BYTEA
+}
+
+usertable "1" -- "0..*" projecttable : "has"
+projecttable "1" -- "0..*" images : "contains"
+
+@enduml
