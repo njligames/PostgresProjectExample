@@ -2,10 +2,11 @@
 
 ## VERSION
 v1.0.0 - Initial MVP.
+v1.0.1 - Added mosaic result table.
 
 ## Create Release
 ```bash
- VERSION=v1.0.0
+ VERSION=v1.0.1
  git add .
  git commit -m "Release ${VERSION}"
  git push
