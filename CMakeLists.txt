@@ -9,7 +9,8 @@ find_package(PostgreSQL REQUIRED)
 
 add_library(MosaifyDB STATIC
         MosaifyDatabase.cpp
-        MosaifyDatabase.h)
+        MosaifyDatabase.h
+        IImageData.h)
 
 target_link_libraries(MosaifyDB ${PostgreSQL_LIBRARIES})
 
