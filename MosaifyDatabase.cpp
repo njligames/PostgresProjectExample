@@ -2,8 +2,8 @@
 // Created by James Folk on 4/14/25.
 //
 
-#include "MosaifyDatabase.h"
-#include "IImageData.h"
+#include "MosaifyDatabase/MosaifyDatabase.h"
+#include "MosaifyDatabase/IImageData.h"
 #include <cstdlib>  // For std::getenv
 #include <libpq-fe.h>
 #include <vector>

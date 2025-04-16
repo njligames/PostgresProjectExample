@@ -14,8 +14,7 @@ find_package(PostgreSQL REQUIRED)
 
 add_library(MosaifyDB STATIC
         MosaifyDatabase.cpp
-        MosaifyDatabase.h
-        IImageData.h)
+        )
 
 target_link_libraries(MosaifyDB ${PostgreSQL_LIBRARIES})
 
@@ -46,7 +45,7 @@ endif()
 install(FILES
         ${CMAKE_SOURCE_DIR}/MosaifyDatabase.h
         ${CMAKE_SOURCE_DIR}/IImageData.h
-        DESTINATION MosaifyDatabase)
+        DESTINATION MosaifyDatabase/include/MosaifyDatabase)
 
 install(TARGETS MosaifyDB
         ARCHIVE DESTINATION MosaifyDatabase/lib

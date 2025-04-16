@@ -1,8 +1,7 @@
 #include <iostream>
 #include <cstdlib>  // For std::getenv
 #include <vector>
-//#include "Database.h"
-#include "MosaifyDatabase.h"
+#include "MosaifyDatabase/MosaifyDatabase.h"
 
 int main(int argc, char* argv[]) {
     std::string error_msg;
