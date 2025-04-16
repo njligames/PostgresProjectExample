@@ -15,7 +15,7 @@ namespace NJLIC {
         virtual ~IImageData() = default;
 
         // Getters
-        virtual std::string getFilename() const = 0;
+        virtual const std::string &getFilename() const = 0;
         virtual int getRows() const = 0;
         virtual int getCols() const = 0;
         virtual int getComps() const = 0;

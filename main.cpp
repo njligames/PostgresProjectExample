@@ -20,13 +20,17 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
+    bool reset = true;
     // Check for the --reset command-line argument
     if (argc > 1 && std::string(argv[1]) == "--reset") {
-        if(!db->reset(error_msg)) {
-            std::cerr << error_msg;
-            return 1;
-        }
+        reset = true;
     }
+
+    if(!db->createTables(reset, error_msg)) {
+        std::cerr << error_msg << std::endl;
+        return 1;
+    }
+
 
     delete db;
 

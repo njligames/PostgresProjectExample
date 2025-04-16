@@ -23,6 +23,11 @@ namespace NJLIC {
 
         static bool executeSQL(PGconn* conn, const std::string &sql, std::string &error_message);
 
+        bool createMosaicImage(PGconn* conn, int project_id, const IImageData& mosaic_image, std::string& error_message);
+        bool readMosaicImage(PGconn* conn, int project_id, IImageData& mosaic_image, std::string& error_message);
+        bool updateMosaicImage(PGconn* conn, int project_id, const IImageData& new_mosaic_image, std::string& error_message);
+        bool deleteMosaicImage(PGconn* conn, int project_id, std::string& error_message);
+
         static bool createProject(PGconn* conn, int user_id, const std::string& project_name, std::string &error_message);
         static bool readProject(PGconn* conn, int project_id, std::string &error_message);
         static bool updateProject(PGconn* conn, int project_id, const std::string& new_project_name, std::string &error_message);
@@ -53,6 +58,11 @@ namespace NJLIC {
 
         bool createTables(bool reset, std::string &error_message);
         bool reset(std::string &error_message);
+
+        bool createMosaicImage(int project_id, const IImageData& mosaic_image, std::string& error_message);
+        bool readMosaicImage(int project_id, IImageData& mosaic_image, std::string& error_message);
+        bool updateMosaicImage(int project_id, const IImageData& new_mosaic_image, std::string& error_message);
+        bool deleteMosaicImage(int project_id, std::string& error_message);
 
         bool createProject(int user_id, const std::string& project_name, std::string &error_message);
         bool readProject(int project_id, std::string &error_message);
