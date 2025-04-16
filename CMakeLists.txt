@@ -3,7 +3,8 @@ project(PostgresProject VERSION 1.0.0)
 
 set(CMAKE_CXX_STANDARD 14)
 
-option(BUILD_TESTS "Build the tests" ON)
+option(BUILD_TESTS "Build the tests" OFF)
+option(BUILD_EXECUTABLE "Build the tests" OFF)
 
 find_package(PostgreSQL REQUIRED)
 
@@ -27,6 +28,7 @@ endif()
 
 # Executable
 
-add_executable(${CMAKE_PROJECT_NAME} main.cpp )
-
-target_link_libraries(${CMAKE_PROJECT_NAME} MosaifyDB)
+if(BUILD_EXECUTABLE)
+    add_executable(${CMAKE_PROJECT_NAME} main.cpp )
+    target_link_libraries(${CMAKE_PROJECT_NAME} MosaifyDB)
+endif()
