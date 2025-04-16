@@ -3,11 +3,11 @@
 ## VERSION
 v1.0.0 - Initial MVP.
 v1.0.1 - Added mosaic result table.
-v1.0.2 - Not building the default executable by default.
+v1.0.3 - Not building the default executable by default.
 
 ## Create Release
 ```bash
- VERSION=v1.0.2
+ VERSION=v1.0.3
  git add .
  git commit -m "Release ${VERSION}"
  git push
