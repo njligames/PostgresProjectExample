@@ -3,8 +3,12 @@ project(PostgresProject VERSION 1.0.0)
 
 set(CMAKE_CXX_STANDARD 14)
 
+IF(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+    SET(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR} CACHE PATH "My Comment" FORCE)
+ENDIF(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+
 option(BUILD_TESTS "Build the tests" OFF)
-option(BUILD_EXECUTABLE "Build the tests" OFF)
+option(BUILD_EXECUTABLE "Build the tests" ON)
 
 find_package(PostgreSQL REQUIRED)
 
@@ -31,4 +35,21 @@ endif()
 if(BUILD_EXECUTABLE)
     add_executable(${CMAKE_PROJECT_NAME} main.cpp )
     target_link_libraries(${CMAKE_PROJECT_NAME} MosaifyDB)
+
+    install(TARGETS ${CMAKE_PROJECT_NAME}
+            ARCHIVE DESTINATION MosaifyDatabase/lib
+            LIBRARY DESTINATION MosaifyDatabase/lib
+            RUNTIME DESTINATION MosaifyDatabase/bin
+    )
 endif()
+
+install(FILES
+        ${CMAKE_SOURCE_DIR}/MosaifyDatabase.h
+        ${CMAKE_SOURCE_DIR}/IImageData.h
+        DESTINATION MosaifyDatabase)
+
+install(TARGETS MosaifyDB
+        ARCHIVE DESTINATION MosaifyDatabase/lib
+        LIBRARY DESTINATION MosaifyDatabase/lib
+        RUNTIME DESTINATION MosaifyDatabase/bin
+)
