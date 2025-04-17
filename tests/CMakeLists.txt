@@ -19,8 +19,8 @@ add_executable(test_database_functions test_database_functions.cpp)
 target_link_libraries(test_database_functions gtest_main MosaifyDB)
 target_include_directories(test_database_functions
         PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../>
         $<INSTALL_INTERFACE:include>
+        ${MOSAIFY_INCLUDE_DIR}
 )
 
 # Add a test

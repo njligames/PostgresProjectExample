@@ -8,10 +8,12 @@ v1.0.4 - Installing the libraries to the correct spot.
 v1.0.5 - Not building the default executable by default.
 v1.0.6 - Fixing include path.
 v1.0.7 - Installing the libraries to the correct spot.
+v1.0.8 - Installing the libraries to the correct spot.
+v1.0.9 - Added a variable to include the directories.
 
 ## Create Release
 ```bash
- VERSION=v1.0.7
+ VERSION=v1.0.9
  git add .
  git commit -m "Release ${VERSION}"
  git push

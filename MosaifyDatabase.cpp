@@ -9,14 +9,14 @@
 #include <vector>
 #include <sstream>
 #include <cstring>
+#include <libpq-fe.h>
 
 namespace NJLIC {
 
-#define HANDLE_ERROR(conn, operation, additionalInfo) \
-    handleError(conn, operation, additionalInfo, __FILE__, __LINE__, __func__)
+    static PGconn* m_conn = nullptr;
 
-    std::string MosaifyDatabase::handleError(PGconn* conn, const std::string& operation, const std::string& additionalInfo,
-                            const char* file, int line, const char* func) {
+    static std::string handleError(PGconn* conn, const std::string& operation, const std::string& additionalInfo,
+                                             const char* file, int line, const char* func) {
         std::stringstream ss;
         ss << "Error during operation: " << operation << "\n";
         if (!additionalInfo.empty()) {
@@ -27,7 +27,10 @@ namespace NJLIC {
         return ss.str();
     }
 
-    bool MosaifyDatabase::executeSQL(PGconn* conn, const std::string &sql, std::string &error_message) {
+#define HANDLE_ERROR(conn, operation, additionalInfo) \
+    handleError(conn, operation, additionalInfo, __FILE__, __LINE__, __func__)
+
+    static bool executeSQL(PGconn* conn, const std::string &sql, std::string &error_message) {
         bool ret = false;
         PGresult* res = PQexec(conn, sql.c_str());
         auto status = PQresultStatus(res);
@@ -43,7 +46,7 @@ namespace NJLIC {
         return ret;
     }
 
-    bool MosaifyDatabase::createMosaicImage(PGconn* conn, int project_id, const IImageData& mosaic_image, std::string& error_message) {
+    static bool createMosaicImage(PGconn* conn, int project_id, const IImageData& mosaic_image, std::string& error_message) {
         const char* sql = "INSERT INTO mosaic_images (project_id, rows, cols, comps, data) VALUES ($1, $2, $3, $4, $5)";
         const char* paramValues[5];
         int paramLengths[5];
@@ -73,7 +76,7 @@ namespace NJLIC {
         return true;
     }
 
-    bool MosaifyDatabase::readMosaicImage(PGconn* conn, int project_id, IImageData& mosaic_image, std::string& error_message) {
+    static bool readMosaicImage(PGconn* conn, int project_id, IImageData& mosaic_image, std::string& error_message) {
         const char* sql = "SELECT rows, cols, comps, data FROM mosaic_images WHERE project_id = $1";
         const char* paramValues[1];
         std::string project_id_str = std::to_string(project_id);
@@ -106,7 +109,7 @@ namespace NJLIC {
         return true;
     }
 
-    bool MosaifyDatabase::updateMosaicImage(PGconn* conn, int project_id, const IImageData& new_mosaic_image, std::string& error_message) {
+    static bool updateMosaicImage(PGconn* conn, int project_id, const IImageData& new_mosaic_image, std::string& error_message) {
         const char* sql = "UPDATE mosaic_images SET rows = $1, cols = $2, comps = $3, data = $4 WHERE project_id = $5";
         const char* paramValues[5];
         int paramLengths[5];
@@ -136,7 +139,7 @@ namespace NJLIC {
         return true;
     }
 
-    bool MosaifyDatabase::deleteMosaicImage(PGconn* conn, int project_id, std::string& error_message) {
+    static bool deleteMosaicImage(PGconn* conn, int project_id, std::string& error_message) {
         const char* sql = "DELETE FROM mosaic_images WHERE project_id = $1";
         const char* paramValues[1];
         std::string project_id_str = std::to_string(project_id);
@@ -154,7 +157,7 @@ namespace NJLIC {
         return true;
     }
 
-    bool MosaifyDatabase::createProject(PGconn* conn, int user_id, const std::string& project_name, std::string &error_message) {
+    static bool createProject(PGconn* conn, int user_id, const std::string& project_name, std::string &error_message) {
         const char* sql = "INSERT INTO projecttable (user_id, project_name) VALUES ($1, $2)";
         std::string user_id_str = std::to_string(user_id);
         const char* paramValues[2] = { user_id_str.c_str(), project_name.c_str() };
@@ -172,7 +175,7 @@ namespace NJLIC {
         return true;
     }
 
-    bool MosaifyDatabase::readProject(PGconn* conn, int project_id, std::string &error_message) {
+    static bool readProject(PGconn* conn, int project_id, std::string &error_message) {
         const char* sql = "SELECT user_id, project_name FROM projecttable WHERE id = $1";
         std::string project_id_str = std::to_string(project_id);
         const char* paramValues[1] = { project_id_str.c_str() };
@@ -198,7 +201,7 @@ namespace NJLIC {
         return true;
     }
 
-    bool MosaifyDatabase::updateProject(PGconn* conn, int project_id, const std::string& new_project_name, std::string &error_message) {
+    static bool updateProject(PGconn* conn, int project_id, const std::string& new_project_name, std::string &error_message) {
         const char* sql = "UPDATE projecttable SET project_name = $1 WHERE id = $2";
         std::string project_id_str = std::to_string(project_id);
         const char* paramValues[2] = { new_project_name.c_str(), project_id_str.c_str() };
@@ -216,7 +219,7 @@ namespace NJLIC {
         return true;
     }
 
-    bool MosaifyDatabase::deleteProject(PGconn* conn, int project_id, std::string &error_message) {
+    static bool deleteProject(PGconn* conn, int project_id, std::string &error_message) {
         const char* sql = "DELETE FROM projecttable WHERE id = $1";
         std::string project_id_str = std::to_string(project_id);
         const char* paramValues[1] = { project_id_str.c_str() };
@@ -234,7 +237,7 @@ namespace NJLIC {
         return true;
     }
 
-    bool MosaifyDatabase::readImages(PGconn* conn, int project_id, std::vector<std::unique_ptr<IImageData>>& images, const std::function<std::unique_ptr<IImageData>()>& createImageFunc, std::string &error_message) {
+    static bool readImages(PGconn* conn, int project_id, std::vector<std::unique_ptr<IImageData>>& images, const std::function<std::unique_ptr<IImageData>()>& createImageFunc, std::string &error_message) {
         // Prepare the SQL query
         const char* sql = "SELECT id, filename, rows, cols, comps, data FROM images WHERE project_id = $1";
         const char* paramValues[1];
@@ -275,7 +278,7 @@ namespace NJLIC {
         return true;
     }
 
-    bool MosaifyDatabase::createUser(PGconn* conn, const std::string& email, const std::string& first_name, const std::string& last_name, std::string &error_message) {
+    static bool createUser(PGconn* conn, const std::string& email, const std::string& first_name, const std::string& last_name, std::string &error_message) {
         const char* sql = "INSERT INTO usertable (email, first_name, last_name) VALUES ($1, $2, $3)";
         const char* paramValues[3] = { email.c_str(), first_name.c_str(), last_name.c_str() };
 
@@ -292,7 +295,7 @@ namespace NJLIC {
         return true;
     }
 
-    bool MosaifyDatabase::readUser(PGconn* conn, int user_id, std::string &error_message) {
+    static bool readUser(PGconn* conn, int user_id, std::string &error_message) {
         const char* sql = "SELECT email, first_name, last_name FROM usertable WHERE id = $1";
         std::string user_id_str = std::to_string(user_id);
         const char* paramValues[1] = { user_id_str.c_str() };
@@ -319,7 +322,7 @@ namespace NJLIC {
         return true;
     }
 
-    bool MosaifyDatabase::updateUser(PGconn* conn, int user_id, const std::string& new_email, const std::string& new_first_name, const std::string& new_last_name, std::string &error_message) {
+    static bool updateUser(PGconn* conn, int user_id, const std::string& new_email, const std::string& new_first_name, const std::string& new_last_name, std::string &error_message) {
         const char* sql = "UPDATE usertable SET email = $1, first_name = $2, last_name = $3 WHERE id = $4";
         std::string user_id_str = std::to_string(user_id);
         const char* paramValues[4] = { new_email.c_str(), new_first_name.c_str(), new_last_name.c_str(), user_id_str.c_str() };
@@ -337,7 +340,7 @@ namespace NJLIC {
         return true;
     }
 
-    bool MosaifyDatabase::deleteUser(PGconn* conn, int user_id, std::string &error_message) {
+    static bool deleteUser(PGconn* conn, int user_id, std::string &error_message) {
         const char* sql = "DELETE FROM usertable WHERE id = $1";
         std::string user_id_str = std::to_string(user_id);
         const char* paramValues[1] = { user_id_str.c_str() };
@@ -355,7 +358,7 @@ namespace NJLIC {
         return true;
     }
 
-    bool MosaifyDatabase::readProjects(PGconn* conn, int user_id, std::vector<int>& project_ids, std::string &error_message) {
+    static bool readProjects(PGconn* conn, int user_id, std::vector<int>& project_ids, std::string &error_message) {
 
         // Prepare the SQL query
         const char* sql = "SELECT id FROM projecttable WHERE user_id = $1";
@@ -383,7 +386,7 @@ namespace NJLIC {
         return true;
     }
 
-    bool MosaifyDatabase::createImage(PGconn* conn, int project_id, const IImageData& img, std::string &error_message) {
+    static bool createImage(PGconn* conn, int project_id, const IImageData& img, std::string &error_message) {
         // Prepare the SQL statement
         const char* sql = "INSERT INTO images (project_id, filename, rows, cols, comps, data) VALUES ($1, $2, $3, $4, $5, $6)";
 
@@ -415,7 +418,7 @@ namespace NJLIC {
         return true;
     }
 
-    bool MosaifyDatabase::createImages(PGconn* conn, int project_id, const std::vector<std::unique_ptr<IImageData>>& images, std::string& error_message) {
+    static bool createImages(PGconn* conn, int project_id, const std::vector<std::unique_ptr<IImageData>>& images, std::string& error_message) {
         // Begin a transaction block
         PGresult* res = PQexec(conn, "BEGIN");
         if (PQresultStatus(res) != PGRES_COMMAND_OK) {
@@ -474,7 +477,7 @@ namespace NJLIC {
         return true;
     }
 
-    bool MosaifyDatabase::readImage(PGconn* conn, int image_id, int &project_id, IImageData &img, std::string &error_message) {
+    static bool readImage(PGconn* conn, int image_id, int &project_id, IImageData &img, std::string &error_message) {
         const char* sql = "SELECT project_id, filename, rows, cols, comps, data FROM images WHERE id = $1";
         const char* paramValues[1];
         paramValues[0] = std::to_string(image_id).c_str();
@@ -512,7 +515,7 @@ namespace NJLIC {
         return true;
     }
 
-    bool MosaifyDatabase::updateImage(PGconn* conn, int image_id, const std::string& new_filename, int new_rows, int new_cols, int new_comps, const std::vector<unsigned char>& new_data, std::string &error_message) {
+    static bool updateImage(PGconn* conn, int image_id, const std::string& new_filename, int new_rows, int new_cols, int new_comps, const std::vector<unsigned char>& new_data, std::string &error_message) {
         const char* sql = "UPDATE images SET filename = $1, rows = $2, cols = $3, comps = $4, data = $5 WHERE id = $6";
         const char* paramValues[6];
         int paramLengths[6];
@@ -539,7 +542,7 @@ namespace NJLIC {
         return true;
     }
 
-    bool MosaifyDatabase::deleteImage(PGconn* conn, int image_id, std::string &error_message) {
+    static bool deleteImage(PGconn* conn, int image_id, std::string &error_message) {
         const char* sql = "DELETE FROM images WHERE id = $1";
         const char* paramValues[1];
         paramValues[0] = std::to_string(image_id).c_str();
@@ -558,13 +561,16 @@ namespace NJLIC {
     }
 
 
-    bool MosaifyDatabase::executeSQL(const MosaifyDatabase &db, const std::string &sql, std::string &error_message) {
-       return MosaifyDatabase::executeSQL(db.m_conn, sql, error_message);
+
+
+    bool MosaifyDatabase::executeSQL(const std::string &sql, std::string &error_message) {
+        return NJLIC::executeSQL(m_conn, sql, error_message);
     }
 
-    MosaifyDatabase::MosaifyDatabase() : m_conn(nullptr) {
+    MosaifyDatabase::MosaifyDatabase() {
 
     }
+
     MosaifyDatabase::~MosaifyDatabase() {
         disconnect();
     }
@@ -601,7 +607,7 @@ namespace NJLIC {
             )";
 
             // Execute SQL statements to drop tables
-            if(!NJLIC::MosaifyDatabase::executeSQL(m_conn, sql, error_message))return false;
+            if(!NJLIC::executeSQL(m_conn, sql, error_message))return false;
         }
 
         // SQL statement to create the user table
@@ -652,10 +658,10 @@ namespace NJLIC {
 
 
         // Execute SQL statements to create tables
-        if(!executeSQL(m_conn, createUserTableSQL, error_message))return false;
-        if(!executeSQL(m_conn, createProjectTableSQL, error_message))return false;
-        if(!executeSQL(m_conn, createImagesTableSQL, error_message))return false;
-        if(!executeSQL(m_conn, createMosaicImagesTableSQL, error_message))return false;
+        if(!NJLIC::executeSQL(m_conn, createUserTableSQL, error_message))return false;
+        if(!NJLIC::executeSQL(m_conn, createProjectTableSQL, error_message))return false;
+        if(!NJLIC::executeSQL(m_conn, createImagesTableSQL, error_message))return false;
+        if(!NJLIC::executeSQL(m_conn, createMosaicImagesTableSQL, error_message))return false;
         return true;
     }
 
@@ -664,78 +670,78 @@ namespace NJLIC {
     }
 
     bool MosaifyDatabase::createMosaicImage(int project_id, const IImageData& mosaic_image, std::string& error_message) {
-        return MosaifyDatabase::createMosaicImage(m_conn, project_id, mosaic_image, error_message);
+        return NJLIC::createMosaicImage(m_conn, project_id, mosaic_image, error_message);
     }
 
     bool MosaifyDatabase::readMosaicImage(int project_id, IImageData& mosaic_image, std::string& error_message) {
-        return MosaifyDatabase::readMosaicImage(m_conn, project_id, mosaic_image, error_message);
+        return NJLIC::readMosaicImage(m_conn, project_id, mosaic_image, error_message);
     }
 
     bool MosaifyDatabase::updateMosaicImage(int project_id, const IImageData& new_mosaic_image, std::string& error_message) {
-        return MosaifyDatabase::updateMosaicImage(m_conn, project_id, new_mosaic_image, error_message);
+        return NJLIC::updateMosaicImage(m_conn, project_id, new_mosaic_image, error_message);
     }
 
     bool MosaifyDatabase::deleteMosaicImage(int project_id, std::string& error_message) {
-        return MosaifyDatabase::deleteMosaicImage(m_conn, project_id, error_message);
+        return NJLIC::deleteMosaicImage(m_conn, project_id, error_message);
     }
 
     bool MosaifyDatabase::createProject(int user_id, const std::string& project_name, std::string &error_message) {
-        return MosaifyDatabase::createProject(m_conn, user_id, project_name, error_message);
+        return NJLIC::createProject(m_conn, user_id, project_name, error_message);
     }
 
     bool MosaifyDatabase::readProject(int project_id, std::string &error_message) {
-        return MosaifyDatabase::readProject(m_conn, project_id, error_message);
+        return NJLIC::readProject(m_conn, project_id, error_message);
     }
 
     bool MosaifyDatabase::updateProject(int project_id, const std::string& new_project_name, std::string &error_message) {
-        return MosaifyDatabase::updateProject(m_conn, project_id, new_project_name, error_message);
+        return NJLIC::updateProject(m_conn, project_id, new_project_name, error_message);
     }
 
     bool MosaifyDatabase::deleteProject(int project_id, std::string &error_message) {
-        return MosaifyDatabase::deleteProject(m_conn, project_id, error_message);
+        return NJLIC::deleteProject(m_conn, project_id, error_message);
     }
 
     bool MosaifyDatabase::readImages(int project_id, std::vector<std::unique_ptr<IImageData>>& images, const std::function<std::unique_ptr<IImageData>()>& createImageFunc, std::string &error_message) {
-       return MosaifyDatabase::readImages(m_conn, project_id, images, createImageFunc, error_message);
+       return NJLIC::readImages(m_conn, project_id, images, createImageFunc, error_message);
     }
 
     bool MosaifyDatabase::createUser(const std::string& email, const std::string& first_name, const std::string& last_name, std::string &error_message) {
-        return MosaifyDatabase::createUser(m_conn, email, first_name, last_name, error_message);
+        return NJLIC::createUser(m_conn, email, first_name, last_name, error_message);
     }
 
     bool MosaifyDatabase::readUser(int user_id, std::string &error_message) {
-        return MosaifyDatabase::readUser(m_conn, user_id, error_message);
+        return NJLIC::readUser(m_conn, user_id, error_message);
     }
 
     bool MosaifyDatabase::updateUser(int user_id, const std::string& new_email, const std::string& new_first_name, const std::string& new_last_name, std::string &error_message) {
-        return MosaifyDatabase::updateUser(m_conn, user_id, new_email, new_first_name, new_last_name, error_message);
+        return NJLIC::updateUser(m_conn, user_id, new_email, new_first_name, new_last_name, error_message);
     }
 
     bool MosaifyDatabase::deleteUser(int user_id, std::string &error_message) {
-        return MosaifyDatabase::deleteUser(m_conn, user_id, error_message);
+        return NJLIC::deleteUser(m_conn, user_id, error_message);
     }
 
     bool MosaifyDatabase::readProjects(int user_id, std::vector<int>& project_ids, std::string &error_message) {
-        return MosaifyDatabase::readProjects(m_conn, user_id, project_ids, error_message);
+        return NJLIC::readProjects(m_conn, user_id, project_ids, error_message);
     }
 
     bool MosaifyDatabase::createImage(int project_id, const IImageData& img, std::string &error_message) {
-        return MosaifyDatabase::createImage(m_conn, project_id, img, error_message);
+        return NJLIC::createImage(m_conn, project_id, img, error_message);
     }
     bool MosaifyDatabase::createImages(int project_id, const std::vector<std::unique_ptr<IImageData>>& images, std::string& error_message) {
-        return MosaifyDatabase::createImages(m_conn, project_id, images, error_message);
+        return NJLIC::createImages(m_conn, project_id, images, error_message);
     }
 
     bool MosaifyDatabase::readImage(int image_id, int &project_id, IImageData &img, std::string &error_message) {
-        return MosaifyDatabase::readImage(m_conn, image_id, project_id, img, error_message);
+        return NJLIC::readImage(m_conn, image_id, project_id, img, error_message);
     }
 
     bool MosaifyDatabase::updateImage(int image_id, const std::string& new_filename, int new_rows, int new_cols, int new_comps, const std::vector<unsigned char>& new_data, std::string &error_message) {
-        return MosaifyDatabase::updateImage(m_conn, image_id, new_filename, new_rows, new_cols, new_comps, new_data, error_message);
+        return NJLIC::updateImage(m_conn, image_id, new_filename, new_rows, new_cols, new_comps, new_data, error_message);
     }
 
     bool MosaifyDatabase::deleteImage(int image_id, std::string &error_message) {
-        return MosaifyDatabase::deleteImage(m_conn, image_id, error_message);
+        return NJLIC::deleteImage(m_conn, image_id, error_message);
     }
 
 } // NJLIC

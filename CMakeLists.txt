@@ -24,6 +24,8 @@ target_include_directories(MosaifyDB
         $<INSTALL_INTERFACE:include>
 )
 
+set(MOSAIFY_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
+
 if(BUILD_TESTS)
     enable_testing()
     add_subdirectory(tests)

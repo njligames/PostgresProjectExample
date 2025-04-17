@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
-#include "MosaifyDatabase.h"  // Include your database header
-#include "IImageData.h"
+#include "MosaifyDatabase/MosaifyDatabase.h"  // Include your database header
+#include "MosaifyDatabase/IImageData.h"
+
 #include <string>
 #include <memory>
 #include <vector>
@@ -98,15 +99,15 @@ protected:
         std::string connectionString = std::getenv("DB_CONN_STRING");
         ASSERT_TRUE(db.connect(connectionString, error_message)) << "Failed to connect: " << error_message;
 
-        MosaifyDatabase::executeSQL(db, "CREATE TABLE IF NOT EXISTS test_table (id SERIAL PRIMARY KEY, name TEXT)", error_message);
-        MosaifyDatabase::executeSQL(db, "TRUNCATE TABLE IF NOT EXISTS test_table", error_message);
+//        MosaifyDatabase::executeSQL(db, "CREATE TABLE IF NOT EXISTS test_table (id SERIAL PRIMARY KEY, name TEXT)", error_message);
+//        MosaifyDatabase::executeSQL(db, "TRUNCATE TABLE IF NOT EXISTS test_table", error_message);
 
         // Optionally reset the database for a clean test environment
         ASSERT_TRUE(db.reset(error_message)) << "Failed to reset database: " << error_message;
     }
 
     void TearDown() override {
-        MosaifyDatabase::executeSQL(db, "DROP TABLE IF EXISTS test_table", error_message);
+//        MosaifyDatabase::executeSQL(db, "DROP TABLE IF EXISTS test_table", error_message);
         // Disconnect from the database
         db.disconnect();
     }
@@ -114,7 +115,7 @@ protected:
 
 TEST_F(MosaifyDatabaseTest, ExecuteSQL) {
 std::string sql = "SELECT version();";
-EXPECT_TRUE(MosaifyDatabase::executeSQL(db, sql, error_message)) << "Execute SQL failed: " << error_message;
+EXPECT_TRUE(db.executeSQL(sql, error_message)) << "Execute SQL failed: " << error_message;
 }
 
 TEST_F(MosaifyDatabaseTest, CreateAndReadUser) {
