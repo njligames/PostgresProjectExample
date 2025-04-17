@@ -10,10 +10,11 @@ v1.0.6 - Fixing include path.
 v1.0.7 - Installing the libraries to the correct spot.
 v1.0.8 - Installing the libraries to the correct spot.
 v1.0.9 - Added a variable to include the directories.
+v1.0.10 - Added a variable to include the directories.
 
 ## Create Release
 ```bash
- VERSION=v1.0.9
+ VERSION=v1.0.10
  git add .
  git commit -m "Release ${VERSION}"
  git push

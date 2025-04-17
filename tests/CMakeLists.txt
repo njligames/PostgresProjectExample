@@ -20,7 +20,7 @@ target_link_libraries(test_database_functions gtest_main MosaifyDB)
 target_include_directories(test_database_functions
         PUBLIC
         $<INSTALL_INTERFACE:include>
-        ${MOSAIFY_INCLUDE_DIR}
+        ${MosaifyDatabase_INCLUDE_DIR}
 )
 
 # Add a test
