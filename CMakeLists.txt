@@ -25,6 +25,8 @@ target_include_directories(MosaifyDB
 )
 
 set(${CMAKE_PROJECT_NAME}_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}" CACHE PATH "Include directory" FORCE)
+message("Include Dir: ${MosaifyDatabase_INCLUDE_DIR}")
+
 
 if(BUILD_TESTS)
     enable_testing()
