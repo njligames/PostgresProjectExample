@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.28)
-project(MosaifyDatabase VERSION 1.0.0)
+project(MosaifyDatabase VERSION 1.0.11)
 
 set(CMAKE_CXX_STANDARD 14)
 
@@ -25,7 +25,6 @@ target_include_directories(MosaifyDB
 )
 
 set(MosaifyDatabase_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}" CACHE PATH "Include directory" FORCE)
-message("Include Dir: ${MosaifyDatabase_INCLUDE_DIR}")
 
 
 if(BUILD_TESTS)
