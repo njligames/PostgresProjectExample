@@ -35,7 +35,7 @@ namespace NJLIC {
         bool deleteMosaicImage(int project_id, std::string& error_message);
 
         bool createProject(int user_id, const std::string& project_name, int &project_id, std::string &error_message);
-        bool readProject(int project_id, std::string &error_message);
+        bool readProject(int project_id, int &user_id, std::string &project_name, std::string &error_message);
         bool updateProject(int project_id, const std::string& new_project_name, std::string &error_message);
         bool deleteProject(int project_id, std::string &error_message);
         bool readImages(int project_id, std::vector<std::unique_ptr<IImageData>>& images, const std::function<std::unique_ptr<IImageData>()>& createImageFunc, std::string &error_message);

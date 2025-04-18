@@ -177,7 +177,7 @@ namespace NJLIC {
         return true;
     }
 
-    static bool readProject(PGconn* conn, int project_id, std::string &error_message) {
+    static bool readProject(PGconn* conn, int project_id, int &user_id, std::string &project_name, std::string &error_message) {
         const char* sql = "SELECT user_id, project_name FROM projecttable WHERE id = $1";
         std::string project_id_str = std::to_string(project_id);
         const char* paramValues[1] = { project_id_str.c_str() };
@@ -196,8 +196,8 @@ namespace NJLIC {
             return false;
         }
 
-        int user_id = std::stoi(PQgetvalue(res, 0, 0));
-        std::string project_name = PQgetvalue(res, 0, 1);
+        user_id = std::stoi(PQgetvalue(res, 0, 0));
+        project_name = PQgetvalue(res, 0, 1);
 
         PQclear(res);
         return true;
@@ -693,8 +693,8 @@ namespace NJLIC {
         return NJLIC::createProject(m_conn, user_id, project_name, project_id, error_message);
     }
 
-    bool MosaifyDatabase::readProject(int project_id, std::string &error_message) {
-        return NJLIC::readProject(m_conn, project_id, error_message);
+    bool MosaifyDatabase::readProject(int project_id, int &user_id, std::string &project_name, std::string &error_message) {
+        return NJLIC::readProject(m_conn, project_id, user_id, project_name, error_message);
     }
 
     bool MosaifyDatabase::updateProject(int project_id, const std::string& new_project_name, std::string &error_message) {

@@ -136,9 +136,15 @@ TEST_F(MosaifyDatabaseTest, UpdateAndDeleteUser) {
 TEST_F(MosaifyDatabaseTest, CreateAndReadProject) {
     int user_id = -1;
     int project_id = -1;
+    std::string project_name = "New Project";
     EXPECT_TRUE(db.createUser("test@example.com", "Test", "User", user_id, error_message)) << "Create user failed: " << error_message;
     EXPECT_TRUE(db.createProject(user_id, "New Project", project_id, error_message)) << "Create project failed: " << error_message;
-    EXPECT_TRUE(db.readProject(project_id, error_message)) << "Read project failed: " << error_message;
+
+    int user_id_read;
+    std::string project_name_read;
+    EXPECT_TRUE(db.readProject(project_id, user_id_read, project_name_read, error_message)) << "Read project failed: " << error_message;
+    ASSERT_TRUE(project_name == project_name_read);
+    ASSERT_TRUE(user_id == user_id_read);
 }
 
 TEST_F(MosaifyDatabaseTest, UpdateAndDeleteProject) {
