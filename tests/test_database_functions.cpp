@@ -5,10 +5,12 @@
 #include <string>
 #include <memory>
 #include <vector>
-
-#include <map>
 #include <fstream>
-#include <sstream>
+
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb_image_write.h"
 
 using namespace NJLIC;
 
@@ -68,25 +70,25 @@ public:
         data = d;
     }
 
-    // Load image data from a file
-    void loadFromFile(const std::string& filePath) {
-        std::ifstream file(filePath, std::ios::binary);
-        if (!file) {
-            throw std::runtime_error("Failed to open file: " + filePath);
-        }
-        data.assign((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-        filename = filePath;
-        // Additional logic to set rows, cols, comps, etc.
-    }
-
-    // Save image data to a file
-    void saveToFile(const std::string& filePath) const {
-        std::ofstream file(filePath, std::ios::binary);
-        if (!file) {
-            throw std::runtime_error("Failed to open file: " + filePath);
-        }
-        file.write(reinterpret_cast<const char*>(data.data()), data.size());
-    }
+//    // Load image data from a file
+//    void loadFromFile(const std::string& filePath) {
+//        std::ifstream file(filePath, std::ios::binary);
+//        if (!file) {
+//            throw std::runtime_error("Failed to open file: " + filePath);
+//        }
+//        data.assign((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+//        filename = filePath;
+//        // Additional logic to set rows, cols, comps, etc.
+//    }
+//
+//    // Save image data to a file
+//    void saveToFile(const std::string& filePath) const {
+//        std::ofstream file(filePath, std::ios::binary);
+//        if (!file) {
+//            throw std::runtime_error("Failed to open file: " + filePath);
+//        }
+//        file.write(reinterpret_cast<const char*>(data.data()), data.size());
+//    }
 };
 
 class MosaifyDatabaseTest : public ::testing::Test {
@@ -119,118 +121,194 @@ EXPECT_TRUE(db.executeSQL(sql, error_message)) << "Execute SQL failed: " << erro
 }
 
 TEST_F(MosaifyDatabaseTest, CreateAndReadUser) {
-EXPECT_TRUE(db.createUser("test@example.com", "Test", "User", error_message)) << "Create user failed: " << error_message;
-EXPECT_TRUE(db.readUser(1, error_message)) << "Read user failed: " << error_message;
+    int user_id =-1;
+    EXPECT_TRUE(db.createUser("test@example.com", "Test", "User", user_id, error_message)) << "Create user failed: " << error_message;
+    EXPECT_TRUE(db.readUser(user_id, error_message)) << "Read user failed: " << error_message;
 }
 
 TEST_F(MosaifyDatabaseTest, UpdateAndDeleteUser) {
-ASSERT_TRUE(db.createUser("test@example.com", "Test", "User", error_message));
-EXPECT_TRUE(db.updateUser(1, "new@example.com", "New", "Name", error_message)) << "Update user failed: " << error_message;
-EXPECT_TRUE(db.deleteUser(1, error_message)) << "Delete user failed: " << error_message;
+    int user_id =-1;
+    EXPECT_TRUE(db.createUser("test@example.com", "Test", "User", user_id, error_message)) << "Create user failed: " << error_message;
+    EXPECT_TRUE(db.updateUser(user_id, "new@example.com", "New", "Name", error_message)) << "Update user failed: " << error_message;
+    EXPECT_TRUE(db.deleteUser(user_id, error_message)) << "Delete user failed: " << error_message;
 }
 
 TEST_F(MosaifyDatabaseTest, CreateAndReadProject) {
-ASSERT_TRUE(db.createUser("test@example.com", "Test", "User", error_message));
-EXPECT_TRUE(db.createProject(1, "New Project", error_message)) << "Create project failed: " << error_message;
-EXPECT_TRUE(db.readProject(1, error_message)) << "Read project failed: " << error_message;
+    int user_id = -1;
+    int project_id = -1;
+    EXPECT_TRUE(db.createUser("test@example.com", "Test", "User", user_id, error_message)) << "Create user failed: " << error_message;
+    EXPECT_TRUE(db.createProject(user_id, "New Project", project_id, error_message)) << "Create project failed: " << error_message;
+    EXPECT_TRUE(db.readProject(project_id, error_message)) << "Read project failed: " << error_message;
 }
 
 TEST_F(MosaifyDatabaseTest, UpdateAndDeleteProject) {
-ASSERT_TRUE(db.createUser("test@example.com", "Test", "User", error_message));
-ASSERT_TRUE(db.createProject(1, "New Project", error_message));
-EXPECT_TRUE(db.updateProject(1, "Updated Project", error_message)) << "Update project failed: " << error_message;
-EXPECT_TRUE(db.deleteProject(1, error_message)) << "Delete project failed: " << error_message;
+    int user_id = -1;
+    int project_id = -1;
+    EXPECT_TRUE(db.createUser("test@example.com", "Test", "User", user_id, error_message)) << "Create user failed: " << error_message;
+    ASSERT_TRUE(db.createProject(user_id, "New Project", project_id, error_message));
+    EXPECT_TRUE(db.updateProject(user_id, "Updated Project", error_message)) << "Update project failed: " << error_message;
+    EXPECT_TRUE(db.deleteProject(user_id, error_message)) << "Delete project failed: " << error_message;
 }
 
 TEST_F(MosaifyDatabaseTest, CreateAndReadMosaicImage) {
-ASSERT_TRUE(db.createUser("test@example.com", "Test", "User", error_message));
-ASSERT_TRUE(db.createProject(1, "New Project", error_message));
+    int user_id = -1;
+    int project_id = -1;
+    int mosaic_image_id = -1;
 
-std::unique_ptr<IImageData> mosaic_image = std::make_unique<ImageData>();
-mosaic_image->setRows(100);
-mosaic_image->setCols(100);
-mosaic_image->setComps(3);
-mosaic_image->setData({0, 1, 2, 3, 4});
+    EXPECT_TRUE(db.createUser("test@example.com", "Test", "User", user_id, error_message)) << "Create user failed: " << error_message;
+    ASSERT_TRUE(db.createProject(user_id, "New Project", project_id, error_message));
 
-EXPECT_TRUE(db.createMosaicImage(1, *mosaic_image, error_message)) << "Create mosaic image failed: " << error_message;
-EXPECT_TRUE(db.readMosaicImage(1, *mosaic_image, error_message)) << "Read mosaic image failed: " << error_message;
+    std::unique_ptr<IImageData> mosaic_image = std::make_unique<ImageData>();
+    mosaic_image->setRows(100);
+    mosaic_image->setCols(100);
+    mosaic_image->setComps(3);
+    mosaic_image->setData({0, 1, 2, 3, 4});
+
+    EXPECT_TRUE(db.createMosaicImage(project_id, *mosaic_image, mosaic_image_id, error_message)) << "Create mosaic image failed: " << error_message;
+    EXPECT_TRUE(db.readMosaicImage(project_id, *mosaic_image, error_message)) << "Read mosaic image failed: " << error_message;
 }
 
 TEST_F(MosaifyDatabaseTest, UpdateAndDeleteMosaicImage) {
-ASSERT_TRUE(db.createUser("test@example.com", "Test", "User", error_message));
-ASSERT_TRUE(db.createProject(1, "New Project", error_message));
+    int user_id = -1;
+    int project_id = -1;
+    int mosaic_image_id = -1;
 
-std::unique_ptr<IImageData> mosaic_image = std::make_unique<ImageData>();
-mosaic_image->setRows(100);
-mosaic_image->setCols(100);
-mosaic_image->setComps(3);
-mosaic_image->setData({0, 1, 2, 3, 4});
+    EXPECT_TRUE(db.createUser("test@example.com", "Test", "User", user_id, error_message)) << "Create user failed: " << error_message;
+    ASSERT_TRUE(db.createProject(user_id, "New Project", project_id, error_message));
 
-ASSERT_TRUE(db.createMosaicImage(1, *mosaic_image, error_message));
+    std::unique_ptr<IImageData> mosaic_image = std::make_unique<ImageData>();
+    mosaic_image->setRows(100);
+    mosaic_image->setCols(100);
+    mosaic_image->setComps(3);
+    mosaic_image->setData({0, 1, 2, 3, 4});
 
-mosaic_image->setRows(200);
-mosaic_image->setCols(200);
-mosaic_image->setComps(4);
-mosaic_image->setData({5, 6, 7, 8, 9});
+    ASSERT_TRUE(db.createMosaicImage(project_id, *mosaic_image, mosaic_image_id, error_message));
 
-EXPECT_TRUE(db.updateMosaicImage(1, *mosaic_image, error_message)) << "Update mosaic image failed: " << error_message;
-EXPECT_TRUE(db.deleteMosaicImage(1, error_message)) << "Delete mosaic image failed: " << error_message;
+    mosaic_image->setRows(200);
+    mosaic_image->setCols(200);
+    mosaic_image->setComps(4);
+    mosaic_image->setData({5, 6, 7, 8, 9});
+
+    EXPECT_TRUE(db.updateMosaicImage(project_id, *mosaic_image, error_message)) << "Update mosaic image failed: " << error_message;
+    EXPECT_TRUE(db.deleteMosaicImage(project_id, error_message)) << "Delete mosaic image failed: " << error_message;
 }
 
 TEST_F(MosaifyDatabaseTest, CreateAndReadImage) {
-ASSERT_TRUE(db.createUser("test@example.com", "Test", "User", error_message));
-ASSERT_TRUE(db.createProject(1, "New Project", error_message));
+    /*
+     * James Folk - I am working on this test.
+     */
 
-std::unique_ptr<IImageData> image = std::make_unique<ImageData>();
-image->setRows(100);
-image->setCols(100);
-image->setComps(3);
-image->setData({0, 1, 2, 3, 4});
+    int user_id = -1;
+    int project_id = -1;
+    int image_id = -1;
 
-EXPECT_TRUE(db.createImage(1, *image, error_message)) << "Create image failed: " << error_message;
+    EXPECT_TRUE(db.createUser("test@example.com", "Test", "User", user_id, error_message)) << "Create user failed: " << error_message;
+    ASSERT_TRUE(db.createProject(user_id, "New Project", project_id, error_message));
 
-int project_id;
-EXPECT_TRUE(db.readImage(1, project_id, *image, error_message)) << "Read image failed: " << error_message;
+
+
+
+
+
+
+
+
+
+
+
+
+    int width, height, channels;
+    unsigned char* imageData = stbi_load("/Users/jamesfolk/Work/PostgresProjectExample/tests/neighbor.png", &width, &height, &channels, 0);
+
+    ASSERT_FALSE (imageData == nullptr);
+
+    std::string output_filename = "/Users/jamesfolk/Work/PostgresProjectExample/tests/out/CreateAndReadImage_before_db_1.png";
+    if (!stbi_write_png(output_filename.c_str(), width, height, channels, imageData, width * channels)) {
+        std::cerr << "Error writing PNG: " << stbi_failure_reason() << std::endl; // stbi_failure_reason() might not be helpful here, but it's worth a try.
+        std::cerr << "Check file path, disk space, and image data." << std::endl;
+    }
+
+
+    std::unique_ptr<IImageData> image_pre = std::make_unique<ImageData>();
+    // Calculate the size in bytes
+    size_t sizeInBytes = (size_t)width * height * channels;
+    image_pre->setRows(height);
+    image_pre->setCols(width);
+    image_pre->setComps(channels);
+
+    std::vector<unsigned char> fileData(sizeInBytes);
+    memcpy(fileData.data(), imageData, sizeInBytes);
+    stbi_image_free(imageData); // Free the image data
+    image_pre->setData(fileData);
+
+    output_filename = "/Users/jamesfolk/Work/PostgresProjectExample/tests/out/CreateAndReadImage_before_db_2.png";
+    if (!stbi_write_png(output_filename.c_str(), image_pre->getCols(), image_pre->getRows(), image_pre->getComps(), fileData.data(), image_pre->getCols() * image_pre->getComps())) {
+        std::cerr << "Error writing PNG: " << stbi_failure_reason() << std::endl; // stbi_failure_reason() might not be helpful here, but it's worth a try.
+        std::cerr << "Check file path, disk space, and image data." << std::endl;
+    }
+
+    EXPECT_TRUE(db.createImage(project_id, *image_pre, image_id, error_message)) << "Create image failed: " << error_message;
+
+    std::unique_ptr<IImageData> image_post = std::make_unique<ImageData>();
+    EXPECT_TRUE(db.readImage(image_id, project_id, *image_post, error_message)) << "Read image failed: " << error_message;
+
+    output_filename = "/Users/jamesfolk/Work/PostgresProjectExample/tests/out/CreateAndReadImage_after.png";
+    if (!stbi_write_png(output_filename.c_str(), image_post->getCols(), image_post->getRows(), image_post->getComps(), fileData.data(), image_post->getCols() * image_post->getComps())) {
+        std::cerr << "Error writing PNG: " << stbi_failure_reason() << std::endl; // stbi_failure_reason() might not be helpful here, but it's worth a try.
+        std::cerr << "Check file path, disk space, and image data." << std::endl;
+    }
 }
 
 TEST_F(MosaifyDatabaseTest, UpdateAndDeleteImage) {
-ASSERT_TRUE(db.createUser("test@example.com", "Test", "User", error_message));
-ASSERT_TRUE(db.createProject(1, "New Project", error_message));
+    int user_id =-1;
+    int project_id = -1;
+    int image_id = -1;
 
-std::unique_ptr<IImageData> image = std::make_unique<ImageData>();
-image->setRows(100);
-image->setCols(100);
-image->setComps(3);
-image->setData({0, 1, 2, 3, 4});
+    EXPECT_TRUE(db.createUser("test@example.com", "Test", "User", user_id, error_message)) << "Create user failed: " << error_message;
+    ASSERT_TRUE(db.createProject(user_id, "New Project", project_id, error_message));
 
-ASSERT_TRUE(db.createImage(1, *image, error_message));
+    std::unique_ptr<IImageData> image = std::make_unique<ImageData>();
+    image->setRows(100);
+    image->setCols(100);
+    image->setComps(3);
+    image->setData({0, 1, 2, 3, 4});
 
-EXPECT_TRUE(db.updateImage(1, "new_image.png", 200, 200, 4, {5, 6, 7, 8, 9}, error_message)) << "Update image failed: " << error_message;
-EXPECT_TRUE(db.deleteImage(1, error_message)) << "Delete image failed: " << error_message;
+    ASSERT_TRUE(db.createImage(project_id, *image, image_id, error_message));
+
+    EXPECT_TRUE(db.updateImage(image_id, "new_image.png", 200, 200, 4, {5, 6, 7, 8, 9}, error_message)) << "Update image failed: " << error_message;
+    EXPECT_TRUE(db.deleteImage(image_id, error_message)) << "Delete image failed: " << error_message;
 }
 
 TEST_F(MosaifyDatabaseTest, CreateAndReadImages) {
-ASSERT_TRUE(db.createUser("test@example.com", "Test", "User", error_message));
-ASSERT_TRUE(db.createProject(1, "New Project", error_message));
+    int user_id =-1;
+    int project_id = -1;
+    int image_id = -1;
 
-std::vector<std::unique_ptr<IImageData>> images;
-images.push_back(std::make_unique<ImageData>("image1.png", 100, 100, 3, std::vector<unsigned char>{0, 1, 2, 3, 4}));
-images.push_back(std::make_unique<ImageData>("image2.png", 200, 200, 3, std::vector<unsigned char>{5, 6, 7, 8, 9}));
+    EXPECT_TRUE(db.createUser("test@example.com", "Test", "User", user_id, error_message)) << "Create user failed: " << error_message;
+    ASSERT_TRUE(db.createProject(user_id, "New Project", project_id, error_message));
 
-EXPECT_TRUE(db.createImages(1, images, error_message)) << "Create images failed: " << error_message;
+    std::vector<std::unique_ptr<IImageData>> images;
+    images.push_back(std::make_unique<ImageData>("image1.png", 100, 100, 3, std::vector<unsigned char>{0, 1, 2, 3, 4}));
+    images.push_back(std::make_unique<ImageData>("image2.png", 200, 200, 3, std::vector<unsigned char>{5, 6, 7, 8, 9}));
 
-std::vector<std::unique_ptr<IImageData>> read_images;
-auto createImageFunc = []() -> std::unique_ptr<IImageData> {
-    return std::make_unique<ImageData>();
-};
+    EXPECT_TRUE(db.createImages(project_id, images, error_message)) << "Create images failed: " << error_message;
 
-EXPECT_TRUE(db.readImages(1, read_images, createImageFunc, error_message)) << "Read images failed: " << error_message;
+    std::vector<std::unique_ptr<IImageData>> read_images;
+    auto createImageFunc = []() -> std::unique_ptr<IImageData> {
+        return std::make_unique<ImageData>();
+    };
+
+    EXPECT_TRUE(db.readImages(project_id, read_images, createImageFunc, error_message)) << "Read images failed: " << error_message;
 }
 
 TEST_F(MosaifyDatabaseTest, ReadProjects) {
-ASSERT_TRUE(db.createUser("test@example.com", "Test", "User", error_message));
-ASSERT_TRUE(db.createProject(1, "New Project", error_message));
+    int user_id =-1;
+    int project_id = -1;
+    int image_id = -1;
 
-std::vector<int> project_ids;
-EXPECT_TRUE(db.readProjects(1, project_ids, error_message)) << "Read projects failed: " << error_message;
+    EXPECT_TRUE(db.createUser("test@example.com", "Test", "User", user_id, error_message)) << "Create user failed: " << error_message;
+    ASSERT_TRUE(db.createProject(user_id, "New Project", project_id, error_message));
+
+    std::vector<int> project_ids;
+    EXPECT_TRUE(db.readProjects(user_id, project_ids, error_message)) << "Read projects failed: " << error_message;
 }

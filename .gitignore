@@ -1,3 +1,5 @@
 cmake-build-debug/
 .DS_Store
+tests/output_image.png
+tests/output_image_before_db.png
 

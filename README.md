@@ -1,17 +1,17 @@
 # PostgreSQL Example Project
 
 ## VERSION
-v1.0.0 - Initial MVP.
-v1.0.1 - Added mosaic result table.
-v1.0.3 - Not building the default executable by default.
-v1.0.4 - Installing the libraries to the correct spot.
-v1.0.5 - Not building the default executable by default.
-v1.0.6 - Fixing include path.
-v1.0.7 - Installing the libraries to the correct spot.
-v1.0.8 - Installing the libraries to the correct spot.
-v1.0.9 - Added a variable to include the directories.
-v1.0.10 - Added a variable to include the directories.
-v1.0.11 - Made the include directory public.
+v1.0.0 - Initial MVP. 
+v1.0.1 - Added mosaic result table. 
+v1.0.3 - Not building the default executable by default. 
+v1.0.4 - Installing the libraries to the correct spot. 
+v1.0.5 - Not building the default executable by default. 
+v1.0.6 - Fixing include path. 
+v1.0.7 - Installing the libraries to the correct spot. 
+v1.0.8 - Installing the libraries to the correct spot. 
+v1.0.9 - Added a variable to include the directories. 
+v1.0.10 - Added a variable to include the directories. 
+v1.0.11 - Made the include directory public. 
 
 ## Create Release
 ```bash
