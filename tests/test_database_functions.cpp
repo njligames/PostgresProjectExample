@@ -253,7 +253,7 @@ TEST_F(MosaifyDatabaseTest, CreateAndReadImage) {
         std::cerr << "Check file path, disk space, and image data." << std::endl;
     }
 
-    EXPECT_TRUE(db.createImage(project_id, *image_pre, image_id, error_message)) << "Create image failed: " << error_message;
+    EXPECT_TRUE(db.createImage(project_id, std::move(image_pre), image_id, error_message)) << "Create image failed: " << error_message;
 
     std::unique_ptr<IImageData> image_post = std::make_unique<ImageData>();
     EXPECT_TRUE(db.readImage(image_id, project_id, *image_post, error_message)) << "Read image failed: " << error_message;
@@ -279,7 +279,7 @@ TEST_F(MosaifyDatabaseTest, UpdateAndDeleteImage) {
     image->setComps(3);
     image->setData({0, 1, 2, 3, 4});
 
-    ASSERT_TRUE(db.createImage(project_id, *image, image_id, error_message));
+    ASSERT_TRUE(db.createImage(project_id, std::move(image), image_id, error_message));
 
     EXPECT_TRUE(db.updateImage(image_id, "new_image.png", 200, 200, 4, {5, 6, 7, 8, 9}, error_message)) << "Update image failed: " << error_message;
     EXPECT_TRUE(db.deleteImage(image_id, error_message)) << "Delete image failed: " << error_message;
