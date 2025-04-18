@@ -12,10 +12,11 @@ v1.0.8 - Installing the libraries to the correct spot.
 v1.0.9 - Added a variable to include the directories. 
 v1.0.10 - Added a variable to include the directories. 
 v1.0.11 - Made the include directory public. 
+v1.0.12 - Made the include directory public. 
 
 ## Create Release
 ```bash
- VERSION=v1.0.11
+ VERSION=v1.0.12
  git add .
  git commit -m "Release ${VERSION}"
  git push
