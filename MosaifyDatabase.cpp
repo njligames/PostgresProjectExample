@@ -422,18 +422,18 @@ namespace NJLIC {
         return true;
     }
 
-    static bool createImages(PGconn* conn, int project_id, const std::vector<std::unique_ptr<IImageData>>& images, std::string& error_message) {
+    static bool createImages(PGconn* conn, int project_id, const std::vector<std::unique_ptr<IImageData>>& images, std::vector<int> &image_ids, std::string& error_message) {
         // Begin a transaction block
         PGresult* res = PQexec(conn, "BEGIN");
         if (PQresultStatus(res) != PGRES_COMMAND_OK) {
-            error_message = HANDLE_ERROR(conn, "Create Images - BEGIN", "");
+            error_message = HANDLE_ERROR(conn, "Read Image", "BEGIN");
             PQclear(res);
             return false;
         }
         PQclear(res);
 
         // Prepare the SQL statement
-        const char* sql = "INSERT INTO images (project_id, filename, rows, cols, comps, data) VALUES ($1, $2, $3, $4, $5, $6)";
+        const char* sql = "INSERT INTO images (project_id, filename, rows, cols, comps, data) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id";
 
         // Convert project_id to string once
         std::string project_id_str = std::to_string(project_id);
@@ -459,20 +459,24 @@ namespace NJLIC {
             // Execute the SQL statement
             res = PQexecParams(conn, sql, 6, nullptr, paramValues, paramLengths, paramFormats, 0);
 
-            if (PQresultStatus(res) != PGRES_COMMAND_OK) {
+            if (PQresultStatus(res) != PGRES_TUPLES_OK) {
                 error_message = HANDLE_ERROR(conn, "Create Images", sql);
                 PQclear(res);
                 // Rollback the transaction if any insert fails
                 PQexec(conn, "ROLLBACK");
                 return false;
             }
+
+            // Retrieve the image_id
+            int image_id = std::stoi(PQgetvalue(res, 0, 0));
+            image_ids.push_back(image_id);
             PQclear(res);
         }
 
         // Commit the transaction
         res = PQexec(conn, "COMMIT");
         if (PQresultStatus(res) != PGRES_COMMAND_OK) {
-            error_message = HANDLE_ERROR(conn, "Create Images - COMMIT", "");
+            error_message = HANDLE_ERROR(conn, "Create Images", "COMMIT");
             PQclear(res);
             return false;
         }
@@ -732,8 +736,8 @@ namespace NJLIC {
     bool MosaifyDatabase::createImage(int project_id, std::unique_ptr<IImageData> img, int &image_id, std::string &error_message) {
         return NJLIC::createImage(m_conn, project_id, std::move(img), image_id, error_message);
     }
-    bool MosaifyDatabase::createImages(int project_id, const std::vector<std::unique_ptr<IImageData>>& images, std::string& error_message) {
-        return NJLIC::createImages(m_conn, project_id, images, error_message);
+    bool MosaifyDatabase::createImages(int project_id, const std::vector<std::unique_ptr<IImageData>>& images, std::vector<int> &image_ids, std::string& error_message) {
+        return NJLIC::createImages(m_conn, project_id, images, image_ids, error_message);
     }
 
     bool MosaifyDatabase::readImage(int image_id, int &project_id, IImageData &img, std::string &error_message) {

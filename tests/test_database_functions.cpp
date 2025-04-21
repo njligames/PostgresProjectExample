@@ -297,7 +297,8 @@ TEST_F(MosaifyDatabaseTest, CreateAndReadImages) {
     images.push_back(std::make_unique<ImageData>("image1.png", 100, 100, 3, std::vector<unsigned char>{0, 1, 2, 3, 4}));
     images.push_back(std::make_unique<ImageData>("image2.png", 200, 200, 3, std::vector<unsigned char>{5, 6, 7, 8, 9}));
 
-    EXPECT_TRUE(db.createImages(project_id, images, error_message)) << "Create images failed: " << error_message;
+    std::vector<int> image_ids;
+    EXPECT_TRUE(db.createImages(project_id, images, image_ids, error_message)) << "Create images failed: " << error_message;
 
     std::vector<std::unique_ptr<IImageData>> read_images;
     auto createImageFunc = []() -> std::unique_ptr<IImageData> {
