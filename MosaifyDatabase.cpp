@@ -489,12 +489,15 @@ namespace NJLIC {
         return true;
     }
 
-    static bool readImage(PGconn* conn, int image_id, int &project_id, IImageData &img, std::string &error_message) {
-        const char* sql = "SELECT project_id, filename, rows, cols, comps, data FROM images WHERE id = $1";
-        const char* paramValues[1];
-        paramValues[0] = std::to_string(image_id).c_str();
+    static bool readImage(PGconn* conn, int image_id, int project_id, IImageData &img, std::string &error_message) {
+        const char* sql = "SELECT filename, rows, cols, comps, data FROM images WHERE id = $1 AND project_id = $2";
+        const char* paramValues[2];
+        std::string image_id_str = std::to_string(image_id);
+        std::string project_id_str = std::to_string(project_id);
+        paramValues[0] = image_id_str.c_str();
+        paramValues[1] = project_id_str.c_str();
 
-        PGresult* res = PQexecParams(conn, sql, 1, nullptr, paramValues, nullptr, nullptr, 0);
+        PGresult* res = PQexecParams(conn, sql, 2, nullptr, paramValues, nullptr, nullptr, 0);
 
         if (PQresultStatus(res) != PGRES_TUPLES_OK) {
             error_message = HANDLE_ERROR(conn, "Read Image", sql);
@@ -508,15 +511,13 @@ namespace NJLIC {
             return false;
         }
 
-        int p_id = std::stoi(PQgetvalue(res, 0, 0));
-        std::string filename = PQgetvalue(res, 0, 1);
-        int rows = std::stoi(PQgetvalue(res, 0, 2));
-        int cols = std::stoi(PQgetvalue(res, 0, 3));
-        int comps = std::stoi(PQgetvalue(res, 0, 4));
-        std::vector<unsigned char> data(PQgetlength(res, 0, 5));
-        memcpy(data.data(), PQgetvalue(res, 0, 5), data.size());
+        std::string filename = PQgetvalue(res, 0, 0);
+        int rows = std::stoi(PQgetvalue(res, 0, 1));
+        int cols = std::stoi(PQgetvalue(res, 0, 2));
+        int comps = std::stoi(PQgetvalue(res, 0, 3));
+        std::vector<unsigned char> data(PQgetlength(res, 0, 4));
+        memcpy(data.data(), PQgetvalue(res, 0, 4), data.size());
 
-        project_id = p_id;
         img.setFilename(filename);
         img.setRows(rows);
         img.setCols(cols);
@@ -744,7 +745,7 @@ namespace NJLIC {
         return NJLIC::createImages(m_conn, project_id, images, image_ids, error_message);
     }
 
-    bool MosaifyDatabase::readImage(int image_id, int &project_id, IImageData &img, std::string &error_message) {
+    bool MosaifyDatabase::readImage(int image_id, int project_id, IImageData &img, std::string &error_message) {
         return NJLIC::readImage(m_conn, image_id, project_id, img, error_message);
     }
 
