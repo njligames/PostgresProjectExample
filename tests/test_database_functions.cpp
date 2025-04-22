@@ -305,7 +305,7 @@ TEST_F(MosaifyDatabaseTest, CreateAndReadImages) {
         return std::make_unique<ImageData>();
     };
 
-    EXPECT_TRUE(db.readImages(project_id, read_images, createImageFunc, error_message)) << "Read images failed: " << error_message;
+    EXPECT_TRUE(db.readImages(project_id, read_images, createImageFunc, image_ids, error_message)) << "Read images failed: " << error_message;
 }
 
 TEST_F(MosaifyDatabaseTest, ReadProjects) {

@@ -239,7 +239,7 @@ namespace NJLIC {
         return true;
     }
 
-    static bool readImages(PGconn* conn, int project_id, std::vector<std::unique_ptr<IImageData>>& images, const std::function<std::unique_ptr<IImageData>()>& createImageFunc, std::string &error_message) {
+    static bool readImages(PGconn *conn, int project_id, std::vector<std::unique_ptr<IImageData>>& images, const std::function<std::unique_ptr<IImageData>()>& createImageFunc, std::vector<int> &image_ids, std::string &error_message) {
         // Prepare the SQL query
         const char* sql = "SELECT id, filename, rows, cols, comps, data FROM images WHERE project_id = $1";
         const char* paramValues[1];
@@ -260,6 +260,8 @@ namespace NJLIC {
         for (int i = 0; i < num_rows; ++i) {
 
             auto img = createImageFunc();
+
+            uint32_t id = ntohl(*reinterpret_cast<const uint32_t*>(PQgetvalue(res, i, 0)));
             std::string filename = PQgetvalue(res, i, 1);
             uint32_t rows = ntohl(*reinterpret_cast<const uint32_t*>(PQgetvalue(res, i, 2)));
             uint32_t cols = ntohl(*reinterpret_cast<const uint32_t*>(PQgetvalue(res, i, 3)));
@@ -274,6 +276,7 @@ namespace NJLIC {
             img->setData(data);
 
             images.push_back(std::move(img));
+            image_ids.push_back(id);
         }
 
         PQclear(res);
@@ -709,8 +712,8 @@ namespace NJLIC {
         return NJLIC::deleteProject(m_conn, project_id, error_message);
     }
 
-    bool MosaifyDatabase::readImages(int project_id, std::vector<std::unique_ptr<IImageData>>& images, const std::function<std::unique_ptr<IImageData>()>& createImageFunc, std::string &error_message) {
-       return NJLIC::readImages(m_conn, project_id, images, createImageFunc, error_message);
+    bool MosaifyDatabase::readImages(int project_id, std::vector<std::unique_ptr<IImageData>>& images, const std::function<std::unique_ptr<IImageData>()>& createImageFunc, std::vector<int> &image_ids, std::string &error_message) {
+       return NJLIC::readImages(m_conn, project_id, images, createImageFunc, image_ids, error_message);
     }
 
     bool MosaifyDatabase::createUser(const std::string& email, const std::string& first_name, const std::string& last_name, int &user_id, std::string &error_message) {
