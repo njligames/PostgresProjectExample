@@ -247,7 +247,7 @@ namespace NJLIC {
         paramValues[0] = project_id_str.c_str();
 
         // Execute the query
-        PGresult* res = PQexecParams(conn, sql, 1, nullptr, paramValues, nullptr, nullptr, 0);
+        PGresult* res = PQexecParams(conn, sql, 1, nullptr, paramValues, nullptr, nullptr, 1);
 
         if (PQresultStatus(res) != PGRES_TUPLES_OK) {
             error_message = HANDLE_ERROR(conn, "Read Images", sql);
