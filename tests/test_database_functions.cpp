@@ -170,7 +170,7 @@ TEST_F(MosaifyDatabaseTest, CreateAndReadMosaicImage) {
     mosaic_image->setComps(3);
     mosaic_image->setData({0, 1, 2, 3, 4});
 
-    EXPECT_TRUE(db.createMosaicImage(project_id, *mosaic_image, mosaic_image_id, error_message)) << "Create mosaic image failed: " << error_message;
+    EXPECT_TRUE(db.createMosaicImage(project_id, mosaic_image, mosaic_image_id, error_message)) << "Create mosaic image failed: " << error_message;
     EXPECT_TRUE(db.readMosaicImage(project_id, *mosaic_image, error_message)) << "Read mosaic image failed: " << error_message;
 }
 
@@ -188,7 +188,7 @@ TEST_F(MosaifyDatabaseTest, UpdateAndDeleteMosaicImage) {
     mosaic_image->setComps(3);
     mosaic_image->setData({0, 1, 2, 3, 4});
 
-    ASSERT_TRUE(db.createMosaicImage(project_id, *mosaic_image, mosaic_image_id, error_message));
+    ASSERT_TRUE(db.createMosaicImage(project_id, mosaic_image, mosaic_image_id, error_message));
 
     mosaic_image->setRows(200);
     mosaic_image->setCols(200);

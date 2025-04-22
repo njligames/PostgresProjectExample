@@ -46,28 +46,30 @@ namespace NJLIC {
         return ret;
     }
 
-    static bool createMosaicImage(PGconn* conn, int project_id, const IImageData& mosaic_image, int &image_id, std::string& error_message) {
+    static bool createMosaicImage(PGconn *conn, int project_id, const std::unique_ptr<IImageData> &img, int &image_id, std::string &error_message) {
+        // Prepare the SQL statement
         const char* sql = "INSERT INTO mosaic_images (project_id, rows, cols, comps, data) VALUES ($1, $2, $3, $4, $5) RETURNING id";
-        const char* paramValues[5];
-        int paramLengths[5];
-        int paramFormats[5] = {0, 0, 0, 0, 1}; // Last parameter (data) is binary
 
-        std::string project_id_str = std::to_string(project_id);
-        std::string rows_str = std::to_string(mosaic_image.getRows());
-        std::string cols_str = std::to_string(mosaic_image.getCols());
-        std::string comps_str = std::to_string(mosaic_image.getComps());
+        // Convert data to a format suitable for PostgreSQL
+        const char* paramValues[6] = {"", "", "", "", "", "\0"};
+        int paramLengths[6] = {0, 0, 0, 0, 0, 0};
+        int paramFormats[6] = {0, 0, 0, 0, 0, 1}; // Last parameter (data) is binary
 
-        paramValues[0] = project_id_str.c_str();
-        paramValues[1] = rows_str.c_str();
-        paramValues[2] = cols_str.c_str();
-        paramValues[3] = comps_str.c_str();
-        paramValues[4] = reinterpret_cast<const char*>(mosaic_image.getData().data());
-        paramLengths[4] = mosaic_image.getData().size();
+        // Set parameter values
+        paramValues[0] = std::to_string(project_id).c_str();
+        paramValues[1] = img->getFilename().c_str();
+        paramValues[2] = std::to_string(img->getRows()).c_str();
+        paramValues[3] = std::to_string(img->getCols()).c_str();
+        paramValues[4] = std::to_string(img->getComps()).c_str();
+        paramValues[5] = reinterpret_cast<const char*>(img->getData().data());
+        paramLengths[5] = img->getData().size();
 
-        PGresult* res = PQexecParams(conn, sql, 5, nullptr, paramValues, paramLengths, paramFormats, 0);
+        // Execute the SQL statement
+        PGresult* res = PQexecParams(conn, sql, 6, nullptr, paramValues, paramLengths, paramFormats, 0);
 
         if (PQresultStatus(res) != PGRES_TUPLES_OK) {
-            error_message = HANDLE_ERROR(conn, "Create Mosaic Image", sql);
+            error_message = HANDLE_ERROR(conn, "Create Image", sql);
+
             PQclear(res);
             return false;
         }
@@ -680,8 +682,8 @@ namespace NJLIC {
         return createTables(true, error_message);
     }
 
-    bool MosaifyDatabase::createMosaicImage(int project_id, const IImageData& mosaic_image, int &image_id, std::string& error_message) {
-        return NJLIC::createMosaicImage(m_conn, project_id, mosaic_image, image_id, error_message);
+    bool MosaifyDatabase::createMosaicImage(int project_id, const std::unique_ptr<IImageData> &img, int &image_id, std::string &error_message) {
+        return NJLIC::createMosaicImage(m_conn, project_id, img, image_id, error_message);
     }
 
     bool MosaifyDatabase::readMosaicImage(int project_id, IImageData& mosaic_image, std::string& error_message) {
