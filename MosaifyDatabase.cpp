@@ -261,9 +261,9 @@ namespace NJLIC {
 
             auto img = createImageFunc();
             std::string filename = PQgetvalue(res, i, 1);
-            int rows = std::stoi(PQgetvalue(res, i, 2));
-            int cols = std::stoi(PQgetvalue(res, i, 3));
-            int comps = std::stoi(PQgetvalue(res, i, 4));
+            uint32_t rows = ntohl(*reinterpret_cast<const uint32_t*>(PQgetvalue(res, i, 2)));
+            uint32_t cols = ntohl(*reinterpret_cast<const uint32_t*>(PQgetvalue(res, i, 3)));
+            uint32_t comps = ntohl(*reinterpret_cast<const uint32_t*>(PQgetvalue(res, i, 4)));
             std::vector<unsigned char> data(PQgetlength(res, i, 5));
             memcpy(data.data(), PQgetvalue(res, i, 5), data.size());
 
