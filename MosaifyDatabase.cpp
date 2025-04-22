@@ -52,20 +52,19 @@ namespace NJLIC {
 
         // Convert data to a format suitable for PostgreSQL
         const char* paramValues[6] = {"", "", "", "", "", "\0"};
-        int paramLengths[6] = {0, 0, 0, 0, 0, 0};
-        int paramFormats[6] = {0, 0, 0, 0, 0, 1}; // Last parameter (data) is binary
+        int paramLengths[5] = {0, 0, 0, 0, 0};
+        int paramFormats[5] = {0, 0, 0, 0, 1}; // Last parameter (data) is binary
 
         // Set parameter values
         paramValues[0] = std::to_string(project_id).c_str();
-        paramValues[1] = img->getFilename().c_str();
-        paramValues[2] = std::to_string(img->getRows()).c_str();
-        paramValues[3] = std::to_string(img->getCols()).c_str();
-        paramValues[4] = std::to_string(img->getComps()).c_str();
-        paramValues[5] = reinterpret_cast<const char*>(img->getData().data());
-        paramLengths[5] = img->getData().size();
+        paramValues[1] = std::to_string(img->getRows()).c_str();
+        paramValues[2] = std::to_string(img->getCols()).c_str();
+        paramValues[3] = std::to_string(img->getComps()).c_str();
+        paramValues[4] = reinterpret_cast<const char*>(img->getData().data());
+        paramLengths[4] = img->getData().size();
 
         // Execute the SQL statement
-        PGresult* res = PQexecParams(conn, sql, 6, nullptr, paramValues, paramLengths, paramFormats, 0);
+        PGresult* res = PQexecParams(conn, sql, 5, nullptr, paramValues, paramLengths, paramFormats, 0);
 
         if (PQresultStatus(res) != PGRES_TUPLES_OK) {
             error_message = HANDLE_ERROR(conn, "Create Image", sql);
