@@ -256,7 +256,7 @@ TEST_F(MosaifyDatabaseTest, CreateAndReadImage) {
     EXPECT_TRUE(db.createImage(project_id, std::move(image_pre), image_id, error_message)) << "Create image failed: " << error_message;
 
     std::unique_ptr<IImageData> image_post = std::make_unique<ImageData>();
-    EXPECT_TRUE(db.readImage(image_id, project_id, *image_post, error_message)) << "Read image failed: " << error_message;
+    EXPECT_TRUE(db.readImage(image_id, project_id, image_post, error_message)) << "Read image failed: " << error_message;
 
     output_filename = "/Users/jamesfolk/Work/PostgresProjectExample/tests/out/CreateAndReadImage_after.png";
     if (!stbi_write_png(output_filename.c_str(), image_post->getCols(), image_post->getRows(), image_post->getComps(), fileData.data(), image_post->getCols() * image_post->getComps())) {

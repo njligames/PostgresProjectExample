@@ -48,7 +48,7 @@ namespace NJLIC {
 
         bool createImage(int project_id, std::unique_ptr<IImageData> img, int &image_id, std::string &error_message);
         bool createImages(int project_id, const std::vector<std::unique_ptr<IImageData>>& images, std::vector<int> &image_ids, std::string& error_message);
-        bool readImage(int image_id, int project_id, IImageData &img, std::string &error_message);
+        bool readImage(int image_id, int project_id, std::unique_ptr<IImageData> &img, std::string &error_message);
         bool updateImage(int image_id, const std::string& new_filename, int new_rows, int new_cols, int new_comps, const std::vector<unsigned char>& new_data, std::string &error_message);
         bool deleteImage(int image_id, std::string &error_message);
     };

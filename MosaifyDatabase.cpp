@@ -489,7 +489,7 @@ namespace NJLIC {
         return true;
     }
 
-    static bool readImage(PGconn* conn, int image_id, int project_id, IImageData &img, std::string &error_message) {
+    static bool readImage(PGconn* conn, int image_id, int project_id, std::unique_ptr<IImageData> &img, std::string &error_message) {
         const char* sql = "SELECT filename, rows, cols, comps, data FROM images WHERE id = $1 AND project_id = $2";
         const char* paramValues[2];
         std::string image_id_str = std::to_string(image_id);
@@ -518,11 +518,11 @@ namespace NJLIC {
         std::vector<unsigned char> data(PQgetlength(res, 0, 4));
         memcpy(data.data(), PQgetvalue(res, 0, 4), data.size());
 
-        img.setFilename(filename);
-        img.setRows(rows);
-        img.setCols(cols);
-        img.setComps(comps);
-        img.setData(data);
+        img->setFilename(filename);
+        img->setRows(rows);
+        img->setCols(cols);
+        img->setComps(comps);
+        img->setData(data);
 
         PQclear(res);
         return true;
@@ -745,7 +745,7 @@ namespace NJLIC {
         return NJLIC::createImages(m_conn, project_id, images, image_ids, error_message);
     }
 
-    bool MosaifyDatabase::readImage(int image_id, int project_id, IImageData &img, std::string &error_message) {
+    bool MosaifyDatabase::readImage(int image_id, int project_id, std::unique_ptr<IImageData> &img, std::string &error_message) {
         return NJLIC::readImage(m_conn, image_id, project_id, img, error_message);
     }
 
