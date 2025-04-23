@@ -507,6 +507,7 @@ namespace NJLIC {
         }
 
         if (PQntuples(res) == 0) {
+            error_message = "No image found for the given with image_id = " + std::to_string(image_id) + " and promect_id = " + std::to_string(project_id);
             PQclear(res);
             return false;
         }
