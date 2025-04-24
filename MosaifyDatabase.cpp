@@ -497,7 +497,7 @@ namespace NJLIC {
         paramValues[0] = image_id_str.c_str();
         paramValues[1] = project_id_str.c_str();
 
-        PGresult* res = PQexecParams(conn, sql, 2, nullptr, paramValues, nullptr, nullptr, 0);
+        PGresult* res = PQexecParams(conn, sql, 2, nullptr, paramValues, nullptr, nullptr, 1);
 
         if (PQresultStatus(res) != PGRES_TUPLES_OK) {
             error_message = HANDLE_ERROR(conn, "Read Image", sql);
@@ -513,9 +513,11 @@ namespace NJLIC {
         }
 
         std::string filename = PQgetvalue(res, 0, 0);
-        int rows = std::stoi(PQgetvalue(res, 0, 1));
-        int cols = std::stoi(PQgetvalue(res, 0, 2));
-        int comps = std::stoi(PQgetvalue(res, 0, 3));
+
+        uint32_t rows = ntohl(*reinterpret_cast<const uint32_t*>(PQgetvalue(res, 0, 1)));
+        uint32_t cols = ntohl(*reinterpret_cast<const uint32_t*>(PQgetvalue(res, 0, 2)));
+        uint32_t comps = ntohl(*reinterpret_cast<const uint32_t*>(PQgetvalue(res, 0, 3)));
+
         std::vector<unsigned char> data(PQgetlength(res, 0, 4));
         memcpy(data.data(), PQgetvalue(res, 0, 4), data.size());
 
