@@ -171,7 +171,7 @@ TEST_F(MosaifyDatabaseTest, CreateAndReadMosaicImage) {
     mosaic_image->setData({0, 1, 2, 3, 4});
 
     EXPECT_TRUE(db.createMosaicImage(project_id, mosaic_image, mosaic_image_id, error_message)) << "Create mosaic image failed: " << error_message;
-    EXPECT_TRUE(db.readMosaicImage(project_id, *mosaic_image, error_message)) << "Read mosaic image failed: " << error_message;
+    EXPECT_TRUE(db.readMosaicImage(project_id, mosaic_image, error_message)) << "Read mosaic image failed: " << error_message;
 }
 
 TEST_F(MosaifyDatabaseTest, UpdateAndDeleteMosaicImage) {

@@ -30,7 +30,7 @@ namespace NJLIC {
         bool reset(std::string &error_message);
 
         bool createMosaicImage(int project_id, const std::unique_ptr<IImageData> &img, int &image_id, std::string &error_message);
-        bool readMosaicImage(int project_id, IImageData& mosaic_image, std::string& error_message);
+        bool readMosaicImage(int project_id, std::unique_ptr<IImageData> &img, std::string& error_message);
         bool updateMosaicImage(int project_id, const IImageData& new_mosaic_image, std::string& error_message);
         bool deleteMosaicImage(int project_id, std::string& error_message);
 

@@ -78,7 +78,7 @@ namespace NJLIC {
         return true;
     }
 
-    static bool readMosaicImage(PGconn* conn, int project_id, IImageData& mosaic_image, std::string& error_message) {
+    static bool readMosaicImage(PGconn* conn, int project_id, std::unique_ptr<IImageData> &img, std::string& error_message) {
         const char* sql = "SELECT rows, cols, comps, data FROM mosaic_images WHERE project_id = $1";
         const char* paramValues[1];
         std::string project_id_str = std::to_string(project_id);
@@ -98,14 +98,14 @@ namespace NJLIC {
             return false;
         }
 
-        mosaic_image.setRows(std::stoi(PQgetvalue(res, 0, 0)));
-        mosaic_image.setCols(std::stoi(PQgetvalue(res, 0, 1)));
-        mosaic_image.setComps(std::stoi(PQgetvalue(res, 0, 2)));
+        img->setRows(std::stoi(PQgetvalue(res, 0, 0)));
+        img->setCols(std::stoi(PQgetvalue(res, 0, 1)));
+        img->setComps(std::stoi(PQgetvalue(res, 0, 2)));
 
         int data_length = PQgetlength(res, 0, 3);
         const unsigned char* data_ptr = reinterpret_cast<const unsigned char*>(PQgetvalue(res, 0, 3));
         std::vector<unsigned char> data(data_ptr, data_ptr + data_length);
-        mosaic_image.setData(data);
+        img->setData(data);
 
         PQclear(res);
         return true;
@@ -689,8 +689,8 @@ namespace NJLIC {
         return NJLIC::createMosaicImage(m_conn, project_id, img, image_id, error_message);
     }
 
-    bool MosaifyDatabase::readMosaicImage(int project_id, IImageData& mosaic_image, std::string& error_message) {
-        return NJLIC::readMosaicImage(m_conn, project_id, mosaic_image, error_message);
+    bool MosaifyDatabase::readMosaicImage(int project_id, std::unique_ptr<IImageData> &img, std::string& error_message) {
+        return NJLIC::readMosaicImage(m_conn, project_id, img, error_message);
     }
 
     bool MosaifyDatabase::updateMosaicImage(int project_id, const IImageData& new_mosaic_image, std::string& error_message) {
