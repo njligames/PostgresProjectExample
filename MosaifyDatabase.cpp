@@ -156,6 +156,7 @@ namespace NJLIC {
     }
 
     static bool deleteMosaicImage(PGconn* conn, int project_id, std::string& error_message) {
+        error_message="";
         const char* sql = "DELETE FROM mosaic_images WHERE project_id = $1";
         const char* paramValues[1];
         std::string project_id_str = std::to_string(project_id);
@@ -171,6 +172,31 @@ namespace NJLIC {
 
         PQclear(res);
         return true;
+    }
+
+    static bool doesMosaicImageExist(PGconn* conn, int project_id, std::string& error_message) {
+        // Prepare the SQL query to count the number of images with the given project_id
+        const char* sql = "SELECT COUNT(*) FROM mosaic_images WHERE project_id = $1";
+        const char* paramValues[1];
+        std::string project_id_str = std::to_string(project_id);
+        paramValues[0] = project_id_str.c_str();
+
+        // Execute the query
+        PGresult* res = PQexecParams(conn, sql, 1, nullptr, paramValues, nullptr, nullptr, 0);
+
+        // Handle query result
+        if (PQresultStatus(res) != PGRES_TUPLES_OK) {
+            error_message = PQerrorMessage(conn);
+            PQclear(res);
+            return false; // Error case
+        }
+
+        // Get the count result
+        int count = std::stoi(PQgetvalue(res, 0, 0));
+        PQclear(res);
+
+        // Return true if at least one image exists for the given project_id
+        return count > 0;
     }
 
     static bool createProject(PGconn* conn, int user_id, const std::string& project_name, int &project_id, std::string &error_message) {
@@ -713,6 +739,10 @@ namespace NJLIC {
 
     bool MosaifyDatabase::deleteMosaicImage(int project_id, std::string& error_message) {
         return NJLIC::deleteMosaicImage(m_conn, project_id, error_message);
+    }
+
+    bool MosaifyDatabase::doesMosaicImageExist(int project_id, std::string& error_message) {
+        return NJLIC::doesMosaicImageExist(m_conn, project_id, error_message);
     }
 
     bool MosaifyDatabase::createProject(int user_id, const std::string& project_name, int &project_id, std::string &error_message) {
