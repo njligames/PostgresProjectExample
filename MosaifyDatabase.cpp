@@ -51,7 +51,7 @@ namespace NJLIC {
         const char* sql = "INSERT INTO mosaic_images (project_id, rows, cols, comps, data) VALUES ($1, $2, $3, $4, $5) RETURNING id";
 
         // Convert data to a format suitable for PostgreSQL
-        const char* paramValues[6] = {"", "", "", "", "", "\0"};
+        const char* paramValues[5] = {"", "", "", "", "\0"};
         int paramLengths[5] = {0, 0, 0, 0, 0};
         int paramFormats[5] = {0, 0, 0, 0, 1}; // Last parameter (data) is binary
 
@@ -457,7 +457,7 @@ namespace NJLIC {
         std::string project_id_str = std::to_string(project_id);
 
         for (const auto& image : images) {
-            const char* paramValues[6];
+            const char* paramValues[6] = {"", "", "", "", "", "\0"};
             int paramLengths[6];
             int paramFormats[6] = {0, 0, 0, 0, 0, 1}; // Last parameter (data) is binary
 
