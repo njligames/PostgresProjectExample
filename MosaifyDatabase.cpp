@@ -84,7 +84,7 @@ namespace NJLIC {
         std::string project_id_str = std::to_string(project_id);
         paramValues[0] = project_id_str.c_str();
 
-        PGresult* res = PQexecParams(conn, sql, 1, nullptr, paramValues, nullptr, nullptr, 0);
+        PGresult* res = PQexecParams(conn, sql, 1, nullptr, paramValues, nullptr, nullptr, 1);
 
         if (PQresultStatus(res) != PGRES_TUPLES_OK) {
             error_message = HANDLE_ERROR(conn, "Read Mosaic Image", sql);
@@ -92,19 +92,33 @@ namespace NJLIC {
             return false;
         }
 
+        auto n = PQntuples(res);
         if (PQntuples(res) == 0) {
             error_message = "No mosaic image found for the given project ID.";
             PQclear(res);
             return false;
         }
 
-        img->setRows(std::stoi(PQgetvalue(res, 0, 0)));
-        img->setCols(std::stoi(PQgetvalue(res, 0, 1)));
-        img->setComps(std::stoi(PQgetvalue(res, 0, 2)));
+//        img->setRows(std::stoi(PQgetvalue(res, 0, 0)));
+//        img->setCols(std::stoi(PQgetvalue(res, 0, 1)));
+//        img->setComps(std::stoi(PQgetvalue(res, 0, 2)));
 
-        int data_length = PQgetlength(res, 0, 3);
-        const unsigned char* data_ptr = reinterpret_cast<const unsigned char*>(PQgetvalue(res, 0, 3));
-        std::vector<unsigned char> data(data_ptr, data_ptr + data_length);
+        uint32_t rows = ntohl(*reinterpret_cast<const uint32_t*>(PQgetvalue(res, 0, 0)));
+        uint32_t cols = ntohl(*reinterpret_cast<const uint32_t*>(PQgetvalue(res, 0, 1)));
+        uint32_t comps = ntohl(*reinterpret_cast<const uint32_t*>(PQgetvalue(res, 0, 2)));
+        img->setRows(rows);
+        img->setCols(cols);
+        img->setComps(comps);
+
+
+//        int data_length = PQgetlength(res, 0, 3);
+//        const unsigned char* data_ptr = reinterpret_cast<const unsigned char*>(PQgetvalue(res, 0, 3));
+//        std::vector<unsigned char> data(data_ptr, data_ptr + data_length);
+//        img->setData(data);
+
+
+        std::vector<unsigned char> data(PQgetlength(res, 0, 3));
+        memcpy(data.data(), PQgetvalue(res, 0, 3), data.size());
         img->setData(data);
 
         PQclear(res);
