@@ -199,6 +199,117 @@ namespace NJLIC {
         return count > 0;
     }
 
+
+    static bool createMosaicMap(PGconn* conn, int project_id, const std::string& mosaic_map, int &map_id, std::string &error_message) {
+        const char* sql = "INSERT INTO mosaic_maps (project_id, map) VALUES ($1, $2) RETURNING id";
+        const char* paramValues[3] = { std::to_string(project_id).c_str(), mosaic_map.c_str() };
+
+        PGresult* res = PQexecParams(conn, sql, 2, nullptr, paramValues, nullptr, nullptr, 0);
+
+        if (PQresultStatus(res) != PGRES_TUPLES_OK) {
+            error_message = HANDLE_ERROR(conn, "Create User", sql);
+            PQclear(res);
+
+            return false;
+        }
+
+        map_id = std::stoi(PQgetvalue(res, 0, 0));
+        PQclear(res);
+        return true;
+
+    }
+
+    static bool readMosaicMap(PGconn* conn, int map_id, int &project_id, std::string& mosaic_map, std::string &error_message) {
+        const char* sql = "SELECT project_id, map FROM mosaic_maps WHERE id = $1";
+        std::string map_id_str = std::to_string(map_id);
+        const char* paramValues[1] = { map_id_str.c_str() };
+
+        PGresult* res = PQexecParams(conn, sql, 1, nullptr, paramValues, nullptr, nullptr, 0);
+
+        if (PQresultStatus(res) != PGRES_TUPLES_OK) {
+            error_message = HANDLE_ERROR(conn, "Read Mosaic Map", sql);
+
+            PQclear(res);
+            return false;
+        }
+
+        if (PQntuples(res) == 0) {
+            PQclear(res);
+            return false;
+        }
+
+        project_id = std::atoi(PQgetvalue(res, 0, 0));
+        mosaic_map = std::string(PQgetvalue(res, 0, 1));
+
+        PQclear(res);
+        return true;
+    }
+
+    static bool updateMosaicMap(PGconn* conn, int map_id, int project_id, const std::string& mosaic_map, std::string &error_message) {
+        const char* sql = "UPDATE mosaic_maps SET project_id = $1, map = $2 WHERE id = $3";
+        std::string map_id_str = std::to_string(map_id);
+        const char* paramValues[4] = { std::to_string(project_id).c_str(), mosaic_map.c_str(), map_id_str.c_str() };
+
+        PGresult* res = PQexecParams(conn, sql, 3, nullptr, paramValues, nullptr, nullptr, 0);
+
+        if (PQresultStatus(res) != PGRES_COMMAND_OK) {
+            error_message = HANDLE_ERROR(conn, "Update Mosaic Map", sql);
+
+            PQclear(res);
+            return false;
+        }
+
+        PQclear(res);
+        return true;
+    }
+
+    static bool deleteMosaicMap(PGconn* conn, int map_id, std::string &error_message) {
+        const char* sql = "DELETE FROM mosaic_maps WHERE id = $1";
+        std::string map_id_str = std::to_string(map_id);
+        const char* paramValues[1] = { map_id_str.c_str() };
+
+        PGresult* res = PQexecParams(conn, sql, 1, nullptr, paramValues, nullptr, nullptr, 0);
+
+        if (PQresultStatus(res) != PGRES_COMMAND_OK) {
+            error_message = HANDLE_ERROR(conn, "Delete User", sql);
+
+            PQclear(res);
+            return false;
+        }
+
+        PQclear(res);
+        return true;
+    }
+
+    static bool doesMosaicMapExist(PGconn* conn, int map_id, std::string& error_message) {
+        // Prepare the SQL query to count the number of images with the given map_id
+        const char* sql = "SELECT COUNT(*) FROM mosaic_maps WHERE map_id = $1";
+        const char* paramValues[1];
+        std::string project_id_str = std::to_string(map_id);
+        paramValues[0] = project_id_str.c_str();
+
+        // Execute the query
+        PGresult* res = PQexecParams(conn, sql, 1, nullptr, paramValues, nullptr, nullptr, 0);
+
+        // Handle query result
+        if (PQresultStatus(res) != PGRES_TUPLES_OK) {
+            error_message = PQerrorMessage(conn);
+            PQclear(res);
+            return false; // Error case
+        }
+
+        // Get the count result
+        int count = std::stoi(PQgetvalue(res, 0, 0));
+        PQclear(res);
+
+        // Return true if at least one image exists for the given map_id
+        return count > 0;
+    }
+
+
+
+
+
     static bool createProject(PGconn* conn, int user_id, const std::string& project_name, int &project_id, std::string &error_message) {
         const char* sql = "INSERT INTO projecttable (user_id, project_name) VALUES ($1, $2) RETURNING id";
         std::string user_id_str = std::to_string(user_id);
@@ -660,6 +771,7 @@ namespace NJLIC {
                 DROP TABLE images;
                 DROP TABLE projecttable;
                 DROP TABLE usertable;
+                DROP TABLE mosaic_maps;
             )";
 
             // Execute SQL statements to drop tables
@@ -712,12 +824,22 @@ namespace NJLIC {
             );
         )";
 
+        const char* createMosaicMapTableSQL = R"(
+            CREATE TABLE IF NOT EXISTS mosaic_maps (
+                id SERIAL PRIMARY KEY,
+                project_id INTEGER NOT NULL,
+                map TEXT,
+                FOREIGN KEY (project_id) REFERENCES projecttable(id) ON DELETE RESTRICT
+            );
+        )";
+
 
         // Execute SQL statements to create tables
         if(!NJLIC::executeSQL(m_conn, createUserTableSQL, error_message))return false;
         if(!NJLIC::executeSQL(m_conn, createProjectTableSQL, error_message))return false;
         if(!NJLIC::executeSQL(m_conn, createImagesTableSQL, error_message))return false;
         if(!NJLIC::executeSQL(m_conn, createMosaicImagesTableSQL, error_message))return false;
+        if(!NJLIC::executeSQL(m_conn, createMosaicMapTableSQL, error_message))return false;
         return true;
     }
 
@@ -744,6 +866,28 @@ namespace NJLIC {
     bool MosaifyDatabase::doesMosaicImageExist(int project_id, std::string& error_message) {
         return NJLIC::doesMosaicImageExist(m_conn, project_id, error_message);
     }
+
+
+    bool MosaifyDatabase::createMosaicMap(int project_id, const std::string& mosaic_map, int &map_id, std::string &error_message) {
+        return NJLIC::createMosaicMap(m_conn, project_id, mosaic_map, map_id, error_message);
+    }
+
+    bool MosaifyDatabase::readMosaicMap(int map_id, int &project_id, std::string& mosaic_map, std::string &error_message) {
+        return NJLIC::readMosaicMap(m_conn, map_id, project_id, mosaic_map, error_message);
+    }
+
+    bool MosaifyDatabase::updateMosaicMap(int map_id, int project_id, const std::string& mosaic_map, std::string &error_message) {
+        return NJLIC::updateMosaicMap(m_conn, map_id, project_id, mosaic_map, error_message);
+    }
+
+    bool MosaifyDatabase::deleteMosaicMap(int map_id, std::string &error_message) {
+        return NJLIC::deleteMosaicMap(m_conn, map_id, error_message);
+    }
+
+    bool MosaifyDatabase::doesMosaicMapExist(int map_id, std::string& error_message) {
+        return NJLIC::doesMosaicMapExist(m_conn, map_id, error_message);
+    }
+
 
     bool MosaifyDatabase::createProject(int user_id, const std::string& project_name, int &project_id, std::string &error_message) {
         return NJLIC::createProject(m_conn, user_id, project_name, project_id, error_message);
