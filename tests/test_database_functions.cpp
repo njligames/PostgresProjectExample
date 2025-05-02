@@ -195,7 +195,7 @@ TEST_F(MosaifyDatabaseTest, UpdateAndDeleteMosaicImage) {
     mosaic_image->setComps(4);
     mosaic_image->setData({5, 6, 7, 8, 9});
 
-    EXPECT_TRUE(db.updateMosaicImage(project_id, *mosaic_image, error_message)) << "Update mosaic image failed: " << error_message;
+    EXPECT_TRUE(db.updateMosaicImage(project_id, mosaic_image, error_message)) << "Update mosaic image failed: " << error_message;
     EXPECT_TRUE(db.deleteMosaicImage(project_id, error_message)) << "Delete mosaic image failed: " << error_message;
 }
 

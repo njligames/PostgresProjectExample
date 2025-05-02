@@ -125,22 +125,22 @@ namespace NJLIC {
         return true;
     }
 
-    static bool updateMosaicImage(PGconn* conn, int project_id, const IImageData& new_mosaic_image, std::string& error_message) {
+    static bool updateMosaicImage(PGconn* conn, int project_id, const std::unique_ptr<IImageData> &img, std::string& error_message) {
         const char* sql = "UPDATE mosaic_images SET rows = $1, cols = $2, comps = $3, data = $4 WHERE project_id = $5";
         const char* paramValues[5];
         int paramLengths[5];
         int paramFormats[5] = {0, 0, 0, 1, 0}; // Fourth parameter (data) is binary
 
-        std::string rows_str = std::to_string(new_mosaic_image.getRows());
-        std::string cols_str = std::to_string(new_mosaic_image.getCols());
-        std::string comps_str = std::to_string(new_mosaic_image.getComps());
+        std::string rows_str = std::to_string(img->getRows());
+        std::string cols_str = std::to_string(img->getCols());
+        std::string comps_str = std::to_string(img->getComps());
         std::string project_id_str = std::to_string(project_id);
 
         paramValues[0] = rows_str.c_str();
         paramValues[1] = cols_str.c_str();
         paramValues[2] = comps_str.c_str();
-        paramValues[3] = reinterpret_cast<const char*>(new_mosaic_image.getData().data());
-        paramLengths[3] = new_mosaic_image.getData().size();
+        paramValues[3] = reinterpret_cast<const char*>(img->getData().data());
+        paramLengths[3] = img->getData().size();
         paramValues[4] = project_id_str.c_str();
 
         PGresult* res = PQexecParams(conn, sql, 5, nullptr, paramValues, paramLengths, paramFormats, 0);
@@ -733,7 +733,7 @@ namespace NJLIC {
         return NJLIC::readMosaicImage(m_conn, project_id, img, error_message);
     }
 
-    bool MosaifyDatabase::updateMosaicImage(int project_id, const IImageData& new_mosaic_image, std::string& error_message) {
+    bool MosaifyDatabase::updateMosaicImage(int project_id, const std::unique_ptr<IImageData>& new_mosaic_image, std::string& error_message) {
         return NJLIC::updateMosaicImage(m_conn, project_id, new_mosaic_image, error_message);
     }
 
