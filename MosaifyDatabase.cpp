@@ -200,7 +200,7 @@ namespace NJLIC {
     }
 
 
-    static bool createMosaicMap(PGconn* conn, int project_id, const std::string& mosaic_map, int &map_id, std::string &error_message) {
+    static bool createMosaicMap(PGconn* conn, int project_id, const std::string& mosaic_map, std::string &error_message) {
         const char* sql = "INSERT INTO mosaic_maps (project_id, map) VALUES ($1, $2) RETURNING id";
         const char* paramValues[3] = { std::to_string(project_id).c_str(), mosaic_map.c_str() };
 
@@ -213,16 +213,16 @@ namespace NJLIC {
             return false;
         }
 
-        map_id = std::stoi(PQgetvalue(res, 0, 0));
+        auto id = std::stoi(PQgetvalue(res, 0, 0));
         PQclear(res);
         return true;
 
     }
 
-    static bool readMosaicMap(PGconn* conn, int map_id, int &project_id, std::string& mosaic_map, std::string &error_message) {
-        const char* sql = "SELECT project_id, map FROM mosaic_maps WHERE id = $1";
-        std::string map_id_str = std::to_string(map_id);
-        const char* paramValues[1] = { map_id_str.c_str() };
+    static bool readMosaicMap(PGconn* conn, int project_id, std::string& mosaic_map, std::string &error_message) {
+        const char* sql = "SELECT map FROM mosaic_maps WHERE project_id = $1";
+        std::string project_id_str = std::to_string(project_id);
+        const char* paramValues[1] = { project_id_str.c_str() };
 
         PGresult* res = PQexecParams(conn, sql, 1, nullptr, paramValues, nullptr, nullptr, 0);
 
@@ -238,19 +238,18 @@ namespace NJLIC {
             return false;
         }
 
-        project_id = std::atoi(PQgetvalue(res, 0, 0));
-        mosaic_map = std::string(PQgetvalue(res, 0, 1));
+        mosaic_map = std::string(PQgetvalue(res, 0, 0));
 
         PQclear(res);
         return true;
     }
 
-    static bool updateMosaicMap(PGconn* conn, int map_id, int project_id, const std::string& mosaic_map, std::string &error_message) {
-        const char* sql = "UPDATE mosaic_maps SET project_id = $1, map = $2 WHERE id = $3";
-        std::string map_id_str = std::to_string(map_id);
-        const char* paramValues[4] = { std::to_string(project_id).c_str(), mosaic_map.c_str(), map_id_str.c_str() };
+    static bool updateMosaicMap(PGconn* conn, int project_id, const std::string& mosaic_map, std::string &error_message) {
+        const char* sql = "UPDATE mosaic_maps SET map = $1 WHERE project_id = $2";
+        std::string project_id_str = std::to_string(project_id);
+        const char* paramValues[2] = { std::to_string(project_id).c_str(), mosaic_map.c_str() };
 
-        PGresult* res = PQexecParams(conn, sql, 3, nullptr, paramValues, nullptr, nullptr, 0);
+        PGresult* res = PQexecParams(conn, sql, 2, nullptr, paramValues, nullptr, nullptr, 0);
 
         if (PQresultStatus(res) != PGRES_COMMAND_OK) {
             error_message = HANDLE_ERROR(conn, "Update Mosaic Map", sql);
@@ -263,15 +262,15 @@ namespace NJLIC {
         return true;
     }
 
-    static bool deleteMosaicMap(PGconn* conn, int map_id, std::string &error_message) {
-        const char* sql = "DELETE FROM mosaic_maps WHERE id = $1";
-        std::string map_id_str = std::to_string(map_id);
-        const char* paramValues[1] = { map_id_str.c_str() };
+    static bool deleteMosaicMap(PGconn* conn, int project_id, std::string &error_message) {
+        const char* sql = "DELETE FROM mosaic_maps WHERE project_id = $1";
+        std::string project_id_str = std::to_string(project_id);
+        const char* paramValues[1] = { project_id_str.c_str() };
 
         PGresult* res = PQexecParams(conn, sql, 1, nullptr, paramValues, nullptr, nullptr, 0);
 
         if (PQresultStatus(res) != PGRES_COMMAND_OK) {
-            error_message = HANDLE_ERROR(conn, "Delete User", sql);
+            error_message = HANDLE_ERROR(conn, "Delete Mosaic Map", sql);
 
             PQclear(res);
             return false;
@@ -281,11 +280,11 @@ namespace NJLIC {
         return true;
     }
 
-    static bool doesMosaicMapExist(PGconn* conn, int map_id, std::string& error_message) {
-        // Prepare the SQL query to count the number of images with the given map_id
-        const char* sql = "SELECT COUNT(*) FROM mosaic_maps WHERE map_id = $1";
+    static bool doesMosaicMapExist(PGconn* conn, int project_id, std::string& error_message) {
+        // Prepare the SQL query to count the number of images with the given project_id
+        const char* sql = "SELECT COUNT(*) FROM mosaic_maps WHERE project_id = $1";
         const char* paramValues[1];
-        std::string project_id_str = std::to_string(map_id);
+        std::string project_id_str = std::to_string(project_id);
         paramValues[0] = project_id_str.c_str();
 
         // Execute the query
@@ -868,24 +867,24 @@ namespace NJLIC {
     }
 
 
-    bool MosaifyDatabase::createMosaicMap(int project_id, const std::string& mosaic_map, int &map_id, std::string &error_message) {
-        return NJLIC::createMosaicMap(m_conn, project_id, mosaic_map, map_id, error_message);
+    bool MosaifyDatabase::createMosaicMap(int project_id, const std::string& mosaic_map, std::string &error_message) {
+        return NJLIC::createMosaicMap(m_conn, project_id, mosaic_map, error_message);
     }
 
-    bool MosaifyDatabase::readMosaicMap(int map_id, int &project_id, std::string& mosaic_map, std::string &error_message) {
-        return NJLIC::readMosaicMap(m_conn, map_id, project_id, mosaic_map, error_message);
+    bool MosaifyDatabase::readMosaicMap(int project_id, std::string& mosaic_map, std::string &error_message) {
+        return NJLIC::readMosaicMap(m_conn, project_id, mosaic_map, error_message);
     }
 
-    bool MosaifyDatabase::updateMosaicMap(int map_id, int project_id, const std::string& mosaic_map, std::string &error_message) {
-        return NJLIC::updateMosaicMap(m_conn, map_id, project_id, mosaic_map, error_message);
+    bool MosaifyDatabase::updateMosaicMap(int project_id, const std::string& mosaic_map, std::string &error_message) {
+        return NJLIC::updateMosaicMap(m_conn, project_id, mosaic_map, error_message);
     }
 
-    bool MosaifyDatabase::deleteMosaicMap(int map_id, std::string &error_message) {
-        return NJLIC::deleteMosaicMap(m_conn, map_id, error_message);
+    bool MosaifyDatabase::deleteMosaicMap(int project_id, std::string &error_message) {
+        return NJLIC::deleteMosaicMap(m_conn, project_id, error_message);
     }
 
-    bool MosaifyDatabase::doesMosaicMapExist(int map_id, std::string& error_message) {
-        return NJLIC::doesMosaicMapExist(m_conn, map_id, error_message);
+    bool MosaifyDatabase::doesMosaicMapExist(int project_id, std::string& error_message) {
+        return NJLIC::doesMosaicMapExist(m_conn, project_id, error_message);
     }
 
 

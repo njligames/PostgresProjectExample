@@ -35,11 +35,11 @@ namespace NJLIC {
         bool deleteMosaicImage(int project_id, std::string& error_message);
         bool doesMosaicImageExist(int project_id, std::string& error_message);
 
-        bool createMosaicMap(int project_id, const std::string& mosaic_map, int &map_id, std::string &error_message);
-        bool readMosaicMap(int map_id, int &project_id, std::string& mosaic_map, std::string &error_message);
-        bool updateMosaicMap(int map_id, int project_id, const std::string& mosaic_map, std::string &error_message);
-        bool deleteMosaicMap(int map_id, std::string &error_message);
-        bool doesMosaicMapExist(int map_id, std::string& error_message);
+        bool createMosaicMap(int project_id, const std::string& mosaic_map, std::string &error_message);
+        bool readMosaicMap(int project_id, std::string& mosaic_map, std::string &error_message);
+        bool updateMosaicMap(int project_id, const std::string& mosaic_map, std::string &error_message);
+        bool deleteMosaicMap(int project_id, std::string &error_message);
+        bool doesMosaicMapExist(int project_id, std::string& error_message);
 
         bool createProject(int user_id, const std::string& project_name, int &project_id, std::string &error_message);
         bool readProject(int project_id, int &user_id, std::string &project_name, std::string &error_message);
