@@ -452,7 +452,7 @@ namespace NJLIC {
         return true;
     }
 
-    static bool readUser(PGconn* conn, int user_id, std::string &error_message) {
+    static bool readUser(PGconn *conn, int user_id, std::string& email, std::string& first_name, std::string& last_name, std::string &error_message) {
         const char* sql = "SELECT email, first_name, last_name FROM usertable WHERE id = $1";
         std::string user_id_str = std::to_string(user_id);
         const char* paramValues[1] = { user_id_str.c_str() };
@@ -471,9 +471,9 @@ namespace NJLIC {
             return false;
         }
 
-        std::string email = PQgetvalue(res, 0, 0);
-        std::string first_name = PQgetvalue(res, 0, 1);
-        std::string last_name = PQgetvalue(res, 0, 2);
+        email = PQgetvalue(res, 0, 0);
+        first_name = PQgetvalue(res, 0, 1);
+        last_name = PQgetvalue(res, 0, 2);
 
         PQclear(res);
         return true;
@@ -912,8 +912,8 @@ namespace NJLIC {
         return NJLIC::createUser(m_conn, email, first_name, last_name, user_id, error_message);
     }
 
-    bool MosaifyDatabase::readUser(int user_id, std::string &error_message) {
-        return NJLIC::readUser(m_conn, user_id, error_message);
+    bool MosaifyDatabase::readUser(int user_id, std::string& email, std::string& first_name, std::string& last_name, std::string &error_message) {
+        return NJLIC::readUser(m_conn, user_id, email, first_name, last_name, error_message);
     }
 
     bool MosaifyDatabase::updateUser(int user_id, const std::string& new_email, const std::string& new_first_name, const std::string& new_last_name, std::string &error_message) {

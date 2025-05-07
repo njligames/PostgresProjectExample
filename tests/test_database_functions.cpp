@@ -122,8 +122,11 @@ EXPECT_TRUE(db.executeSQL(sql, error_message)) << "Execute SQL failed: " << erro
 
 TEST_F(MosaifyDatabaseTest, CreateAndReadUser) {
     int user_id =-1;
-    EXPECT_TRUE(db.createUser("test@example.com", "Test", "User", user_id, error_message)) << "Create user failed: " << error_message;
-    EXPECT_TRUE(db.readUser(user_id, error_message)) << "Read user failed: " << error_message;
+    std::string email = "test@example.com";
+    std::string fname = "Test";
+    std::string lname = "User";
+    EXPECT_TRUE(db.createUser(email, fname, lname, user_id, error_message)) << "Create user failed: " << error_message;
+    EXPECT_TRUE(db.readUser(user_id, email, fname, lname, error_message)) << "Read user failed: " << error_message;
 }
 
 TEST_F(MosaifyDatabaseTest, UpdateAndDeleteUser) {
