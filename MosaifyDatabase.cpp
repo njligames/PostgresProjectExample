@@ -767,10 +767,10 @@ namespace NJLIC {
             // SQL statements to drop tables if they exist
             const char* sql = R"(
                 DROP TABLE mosaic_images;
+                DROP TABLE mosaic_maps;
                 DROP TABLE images;
                 DROP TABLE projecttable;
                 DROP TABLE usertable;
-                DROP TABLE mosaic_maps;
             )";
 
             // Execute SQL statements to drop tables
