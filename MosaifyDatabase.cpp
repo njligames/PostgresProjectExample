@@ -543,6 +543,115 @@ namespace NJLIC {
         return true;
     }
 
+    static bool createImageROI(PGconn* conn, int project_id, int images_id, int x, int y, int width, int height, int &image_roi_id, std::string &error_message)  {
+        // Prepare the SQL statement
+        const char* sql = "INSERT INTO images_roi (project_id, images_id, x, y, width, height) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id";
+
+        // Convert data to a format suitable for PostgreSQL
+        const char* paramValues[6] = {"", "", "", "", "", "\0"};
+        int paramLengths[6] = {0, 0, 0, 0, 0, 0};
+        int paramFormats[6] = {0, 0, 0, 0, 0, 0};
+
+        // Set parameter values
+        paramValues[0] = std::to_string(project_id).c_str();
+        paramValues[1] = std::to_string(images_id).c_str();;
+        paramValues[2] = std::to_string(x).c_str();
+        paramValues[3] = std::to_string(y).c_str();
+        paramValues[4] = std::to_string(width).c_str();
+        paramValues[5] = std::to_string(height).c_str();
+
+        // Execute the SQL statement
+        PGresult* res = PQexecParams(conn, sql, 6, nullptr, paramValues, paramLengths, paramFormats, 0);
+
+        if (PQresultStatus(res) != PGRES_TUPLES_OK) {
+            error_message = HANDLE_ERROR(conn, "Create Image ROI", sql);
+
+            PQclear(res);
+            return false;
+        }
+
+        image_roi_id = std::stoi(PQgetvalue(res, 0, 0));
+        PQclear(res);
+        return true;
+
+    }
+
+    static bool readImageROI(PGconn* conn, int image_roi_id, int &x, int &y, int &width, int &height, std::string &error_message)  {
+        const char* sql = "SELECT x, y, width, height FROM images_roi WHERE id = $1";
+        const char* paramValues[1];
+        std::string image_id_str = std::to_string(image_roi_id);
+        paramValues[0] = image_id_str.c_str();
+
+        PGresult* res = PQexecParams(conn, sql, 2, nullptr, paramValues, nullptr, nullptr, 1);
+
+        if (PQresultStatus(res) != PGRES_TUPLES_OK) {
+            error_message = HANDLE_ERROR(conn, "Read Image", sql);
+
+            PQclear(res);
+            return false;
+        }
+
+        if (PQntuples(res) == 0) {
+            error_message = "No image found for the given with image_id = " + std::to_string(image_roi_id) ;
+            PQclear(res);
+            return false;
+        }
+
+        std::string filename = PQgetvalue(res, 0, 0);
+
+        x = ntohl(*reinterpret_cast<const uint32_t*>(PQgetvalue(res, 0, 1)));
+        y = ntohl(*reinterpret_cast<const uint32_t*>(PQgetvalue(res, 0, 2)));
+        width = ntohl(*reinterpret_cast<const uint32_t*>(PQgetvalue(res, 0, 3)));
+        height = ntohl(*reinterpret_cast<const uint32_t*>(PQgetvalue(res, 0, 4)));
+
+        PQclear(res);
+        return true;
+
+    }
+
+    static bool updateImageROI(PGconn* conn, int image_roi_id, int x, int y, int width, int height, std::string &error_message)  {
+        const char* sql = "UPDATE images_roi SET x = $1, y = $2, width = $3, height = $4 WHERE id = $5";
+        const char* paramValues[5];
+        int paramLengths[5];
+        int paramFormats[5] = {0, 0, 0, 0, 0}; // Data is binary
+
+        paramValues[0] = std::to_string(x).c_str();
+        paramValues[1] = std::to_string(y).c_str();
+        paramValues[2] = std::to_string(width).c_str();
+        paramValues[3] = std::to_string(height).c_str();
+        paramValues[4] = std::to_string(image_roi_id).c_str();
+
+        PGresult* res = PQexecParams(conn, sql, 5, nullptr, paramValues, paramLengths, paramFormats, 0);
+
+        if (PQresultStatus(res) != PGRES_COMMAND_OK) {
+            error_message = HANDLE_ERROR(conn, "Update Image", sql);
+
+            PQclear(res);
+            return false;
+        }
+
+        PQclear(res);
+        return true;
+    }
+
+    static bool deleteImageROI(PGconn* conn, int image_roi_id, std::string &error_message)  {
+        const char* sql = "DELETE FROM images_roi WHERE id = $1";
+        const char* paramValues[1];
+        paramValues[0] = std::to_string(image_roi_id).c_str();
+
+        PGresult* res = PQexecParams(conn, sql, 1, nullptr, paramValues, nullptr, nullptr, 0);
+
+        if (PQresultStatus(res) != PGRES_COMMAND_OK) {
+            error_message = HANDLE_ERROR(conn, "Delete Image", sql);
+
+            PQclear(res);
+            return false;
+        }
+
+        PQclear(res);
+        return true;
+    }
+
     static bool createImage(PGconn* conn, int project_id, std::unique_ptr<IImageData> img, int &image_id, std::string &error_message) {
         // Prepare the SQL statement
         const char* sql = "INSERT INTO images (project_id, filename, rows, cols, comps, data) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id";
@@ -768,6 +877,7 @@ namespace NJLIC {
             const char* sql = R"(
                 DROP TABLE mosaic_images;
                 DROP TABLE mosaic_maps;
+                DROP TABLE images_roi;
                 DROP TABLE images;
                 DROP TABLE projecttable;
                 DROP TABLE usertable;
@@ -811,6 +921,21 @@ namespace NJLIC {
             );
         )";
 
+        // SQL statement to create the images table
+        const char* createImagesROITableSQL = R"(
+            CREATE TABLE IF NOT EXISTS images_roi (
+                id SERIAL PRIMARY KEY,
+                project_id INTEGER NOT NULL,
+                images_id INTEGER NOT NULL,
+                x INTEGER NOT NULL,
+                y INTEGER NOT NULL,
+                width INTEGER NOT NULL,
+                height INTEGER NOT NULL,
+                FOREIGN KEY (project_id) REFERENCES projecttable(id) ON DELETE CASCADE,
+                FOREIGN KEY (images_id) REFERENCES images(id) ON DELETE CASCADE
+            );
+        )";
+
         const char* createMosaicImagesTableSQL = R"(
             CREATE TABLE IF NOT EXISTS mosaic_images (
                 id SERIAL PRIMARY KEY,
@@ -838,6 +963,7 @@ namespace NJLIC {
         if(!NJLIC::executeSQL(m_conn, createProjectTableSQL, error_message))return false;
         if(!NJLIC::executeSQL(m_conn, createImagesTableSQL, error_message))return false;
         if(!NJLIC::executeSQL(m_conn, createMosaicImagesTableSQL, error_message))return false;
+        if(!NJLIC::executeSQL(m_conn, createImagesROITableSQL, error_message))return false;
         if(!NJLIC::executeSQL(m_conn, createMosaicMapTableSQL, error_message))return false;
         return true;
     }
