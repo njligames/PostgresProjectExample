@@ -21,11 +21,12 @@ private:
     int cols;
     int comps; // Number of components (e.g., color channels)
     std::vector<unsigned char> data;
+    size_t id;
 
 public:
 
 //    images.push_back(std::make_unique<ImageData>("image2.png", 200, 200, 3, std::vector<unsigned char>{5, 6, 7, 8, 9}));
-    ImageData() : rows(0), cols(0), comps(0) {}
+    ImageData() : rows(0), cols(0), comps(0), id(std::numeric_limits<size_t>::min()) {}
     ImageData(const std::string &fname, int r, int c, int cps, const std::vector<unsigned char>&d) : filename(fname), rows(r), cols(c), comps(cps), data(d) {}
 
     // Getters
@@ -49,6 +50,10 @@ public:
         return data;
     }
 
+    size_t getId()const override {
+        return id;
+    }
+
     // Setters
     void setFilename(const std::string& fname) override {
         filename = fname;
@@ -68,6 +73,10 @@ public:
 
     void setData(const std::vector<unsigned char>& d) override {
         data = d;
+    }
+
+    void setId(const size_t id) override{
+        this->id = id;
     }
 
 //    // Load image data from a file

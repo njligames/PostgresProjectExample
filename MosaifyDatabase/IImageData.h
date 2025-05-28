@@ -20,6 +20,7 @@ namespace NJLIC {
         virtual int getCols() const = 0;
         virtual int getComps() const = 0;
         virtual const std::vector<unsigned char>& getData() const = 0;
+        virtual size_t getId() const = 0;
 
         // Setters
         virtual void setFilename(const std::string& filename) = 0;
@@ -27,6 +28,7 @@ namespace NJLIC {
         virtual void setCols(int cols) = 0;
         virtual void setComps(int comps) = 0;
         virtual void setData(const std::vector<unsigned char>& data) = 0;
+        virtual void setId(const size_t id) = 0;
     };
 }
 
