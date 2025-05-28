@@ -785,6 +785,7 @@ namespace NJLIC {
         img->setCols(cols);
         img->setComps(comps);
         img->setData(data);
+        img->setId(image_id);
 
         PQclear(res);
         return true;
