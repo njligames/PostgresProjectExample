@@ -425,6 +425,7 @@ namespace NJLIC {
             img->setCols(cols);
             img->setComps(comps);
             img->setData(data);
+            img->setId(id);
 
             images.push_back(std::move(img));
             image_ids.push_back(id);
