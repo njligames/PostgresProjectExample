@@ -108,7 +108,12 @@ namespace NJLIC {
         paramValues[1] = std::to_string(img->getRows()).c_str();
         paramValues[2] = std::to_string(img->getCols()).c_str();
         paramValues[3] = std::to_string(img->getComps()).c_str();
-        paramValues[4] = reinterpret_cast<const char*>(img->getData().data());
+
+
+        auto d = img->getData();
+        NJLIC::squish(d);
+        paramValues[4] = reinterpret_cast<const char*>(d.data());
+//        paramValues[4] = reinterpret_cast<const char*>(img->getData().data());
         paramLengths[4] = img->getData().size();
 
         // Execute the SQL statement
@@ -167,6 +172,8 @@ namespace NJLIC {
 
         std::vector<unsigned char> data(PQgetlength(res, 0, 3));
         memcpy(data.data(), PQgetvalue(res, 0, 3), data.size());
+        NJLIC::unsquish(data, PQgetlength(res, 0, 3));
+
         img->setData(data);
 
         PQclear(res);
@@ -187,7 +194,10 @@ namespace NJLIC {
         paramValues[0] = rows_str.c_str();
         paramValues[1] = cols_str.c_str();
         paramValues[2] = comps_str.c_str();
-        paramValues[3] = reinterpret_cast<const char*>(img->getData().data());
+        auto d = img->getData();
+        NJLIC::squish(d);
+        paramValues[3] = reinterpret_cast<const char*>(d.data());
+//        paramValues[3] = reinterpret_cast<const char*>(img->getData().data());
         paramLengths[3] = img->getData().size();
         paramValues[4] = project_id_str.c_str();
 
