@@ -1,4 +1,5 @@
 include(FetchContent)
+find_package(ZLIB REQUIRED)
 
 # Fetch GoogleTest
 FetchContent_Declare(
@@ -16,7 +17,7 @@ FetchContent_MakeAvailable(googletest)
 add_executable(test_database_functions test_database_functions.cpp)
 
 # Link GoogleTest and your library
-target_link_libraries(test_database_functions gtest_main MosaifyDB)
+target_link_libraries(test_database_functions gtest_main MosaifyDB ZLIB::ZLIB)
 target_include_directories(test_database_functions
         PUBLIC
         $<INSTALL_INTERFACE:include>

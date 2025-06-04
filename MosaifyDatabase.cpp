@@ -10,10 +10,58 @@
 #include <sstream>
 #include <cstring>
 #include <libpq-fe.h>
+#include <zlib.h>
 
 namespace NJLIC {
 
     static PGconn* m_conn = nullptr;
+
+    // Function to compress data using zlib
+    static std::vector<unsigned char> compress_data(const std::vector<unsigned char>& data) {
+        // Estimate the size of the compressed data
+        uLongf compressed_size = compressBound(data.size());
+        std::vector<unsigned char> compressed_data(compressed_size);
+
+        // Compress the data
+        int result = compress(compressed_data.data(), &compressed_size, data.data(), data.size());
+        if (result != Z_OK) {
+            throw std::runtime_error("Failed to compress data");
+        }
+
+        // Resize the vector to the actual size of the compressed data
+        compressed_data.resize(compressed_size);
+        return compressed_data;
+    }
+
+    // Function to uncompress data using zlib
+    static std::vector<unsigned char> uncompress_data(const std::vector<unsigned char>& compressed_data, size_t original_size) {
+        std::vector<unsigned char> uncompressed_data(original_size);
+
+        // Uncompress the data
+        uLongf uncompressed_size = original_size;
+        int result = uncompress(uncompressed_data.data(), &uncompressed_size, compressed_data.data(), compressed_data.size());
+        if (result != Z_OK) {
+            throw std::runtime_error("Failed to uncompress data");
+        }
+
+        // Resize the vector to the actual size of the uncompressed data
+        uncompressed_data.resize(uncompressed_size);
+        return uncompressed_data;
+    }
+
+    static int iterations = 10;
+    static void squish(std::vector<unsigned char> &data) {
+        auto temp = data;
+        for (int i = 0; i < iterations; ++i) {
+            temp = compress_data(temp);
+        }
+    }
+    static void unsquish(std::vector<unsigned char> &data, size_t original_size) {
+        auto temp = data;
+        for (int i = 0; i < iterations; ++i) {
+            temp = uncompress_data(temp, original_size);
+        }
+    }
 
     static std::string handleError(PGconn* conn, const std::string& operation, const std::string& additionalInfo,
                                              const char* file, int line, const char* func) {
@@ -668,7 +716,9 @@ namespace NJLIC {
         paramValues[2] = std::to_string(img->getRows()).c_str();
         paramValues[3] = std::to_string(img->getCols()).c_str();
         paramValues[4] = std::to_string(img->getComps()).c_str();
-        paramValues[5] = reinterpret_cast<const char*>(img->getData().data());
+        auto d = img->getData();
+        NJLIC::squish(d);
+        paramValues[5] = reinterpret_cast<const char*>(d.data());
         paramLengths[5] = img->getData().size();
 
         // Execute the SQL statement
@@ -717,7 +767,10 @@ namespace NJLIC {
             paramValues[2] = rows_str.c_str();
             paramValues[3] = cols_str.c_str();
             paramValues[4] = comps_str.c_str();
-            paramValues[5] = reinterpret_cast<const char*>(image->getData().data());
+//            paramValues[5] = reinterpret_cast<const char*>(image->getData().data());
+            auto d = image->getData();
+            NJLIC::squish(d);
+            paramValues[5] = reinterpret_cast<const char*>(d.data());
             paramLengths[5] = image->getData().size();
 
             // Execute the SQL statement
@@ -785,6 +838,8 @@ namespace NJLIC {
         img->setRows(rows);
         img->setCols(cols);
         img->setComps(comps);
+
+        NJLIC::unsquish(data, PQgetlength(res, 0, 4));
         img->setData(data);
         img->setId(image_id);
 
@@ -802,7 +857,13 @@ namespace NJLIC {
         paramValues[1] = std::to_string(new_rows).c_str();
         paramValues[2] = std::to_string(new_cols).c_str();
         paramValues[3] = std::to_string(new_comps).c_str();
-        paramValues[4] = reinterpret_cast<const char*>(new_data.data());
+
+
+        auto d = new_data;
+        NJLIC::squish(d);
+        paramValues[4] = reinterpret_cast<const char*>(d.data());
+//        paramValues[4] = reinterpret_cast<const char*>(new_data.data());
+
         paramLengths[4] = new_data.size();
         paramValues[5] = std::to_string(image_id).c_str();
 
@@ -836,9 +897,6 @@ namespace NJLIC {
         PQclear(res);
         return true;
     }
-
-
-
 
     bool MosaifyDatabase::executeSQL(const std::string &sql, std::string &error_message) {
         return NJLIC::executeSQL(m_conn, sql, error_message);
