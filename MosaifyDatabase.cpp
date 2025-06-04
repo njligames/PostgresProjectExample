@@ -1056,6 +1056,19 @@ namespace NJLIC {
         return NJLIC::readProjects(m_conn, user_id, project_ids, error_message);
     }
 
+    bool MosaifyDatabase::createImageROI(int project_id, int images_id, int x, int y, int width, int height, int &image_roi_id, std::string &error_message) {
+        return NJLIC::createImageROI(m_conn, project_id, images_id, x, y, width, height, image_roi_id, error_message);
+    }
+    bool MosaifyDatabase::readImageROI(int image_roi_id, int &x, int &y, int &width, int &height, std::string &error_message) {
+        return NJLIC::readImageROI(m_conn, image_roi_id, x, y, width, height, error_message);
+    }
+    bool MosaifyDatabase::updateImageROI(int image_roi_id, int x, int y, int width, int height, std::string &error_message) {
+        return NJLIC::updateImageROI(m_conn, image_roi_id, x, y, width, height, error_message);
+    }
+    bool MosaifyDatabase::deleteImageROI(int image_roi_id, std::string &error_message) {
+        return NJLIC::deleteImageROI(m_conn, image_roi_id, error_message);
+    }
+
     bool MosaifyDatabase::createImage(int project_id, std::unique_ptr<IImageData> img, int &image_id, std::string &error_message) {
         return NJLIC::createImage(m_conn, project_id, std::move(img), image_id, error_message);
     }
