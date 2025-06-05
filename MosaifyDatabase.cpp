@@ -16,6 +16,23 @@ namespace NJLIC {
 
     static PGconn* m_conn = nullptr;
 
+    static std::string get_reason(int result) {
+        switch (result) {
+            case Z_OK:return "Z_OK";
+            case Z_STREAM_END:return "Z_STREAM_END";
+            case Z_NEED_DICT:return "Z_NEED_DICT";
+            case Z_ERRNO:return "Z_ERRNO";
+            case Z_STREAM_ERROR:return "Z_STREAM_ERROR";
+            case Z_DATA_ERROR:return "Z_DATA_ERROR";
+            case Z_MEM_ERROR:return "Z_MEM_ERROR";
+            case Z_BUF_ERROR:return "Z_BUF_ERROR";
+            case Z_VERSION_ERROR:return "Z_VERSION_ERROR";
+        }
+        return "UNKNOWN";
+    }
+
+    
+
     // Function to compress data using zlib
     static std::vector<unsigned char> compress_data(const std::vector<unsigned char>& data) {
         // Estimate the size of the compressed data
@@ -25,7 +42,7 @@ namespace NJLIC {
         // Compress the data
         int result = compress(compressed_data.data(), &compressed_size, data.data(), data.size());
         if (result != Z_OK) {
-            throw std::runtime_error("Failed to compress data");
+            throw std::runtime_error("Failed to compress data. Reason: " + NJLIC::get_reason(result));
         }
 
         // Resize the vector to the actual size of the compressed data
@@ -41,7 +58,7 @@ namespace NJLIC {
         uLongf uncompressed_size = original_size;
         int result = uncompress(uncompressed_data.data(), &uncompressed_size, compressed_data.data(), compressed_data.size());
         if (result != Z_OK) {
-            throw std::runtime_error("Failed to uncompress data");
+            throw std::runtime_error("Failed to uncompress data. Reason: " + NJLIC::get_reason(result));
         }
 
         // Resize the vector to the actual size of the uncompressed data
@@ -172,7 +189,7 @@ namespace NJLIC {
 
         std::vector<unsigned char> data(PQgetlength(res, 0, 3));
         memcpy(data.data(), PQgetvalue(res, 0, 3), data.size());
-        NJLIC::unsquish(data, PQgetlength(res, 0, 3));
+//        NJLIC::unsquish(data, PQgetlength(res, 0, 3));
 
         img->setData(data);
 
@@ -194,10 +211,10 @@ namespace NJLIC {
         paramValues[0] = rows_str.c_str();
         paramValues[1] = cols_str.c_str();
         paramValues[2] = comps_str.c_str();
-        auto d = img->getData();
-        NJLIC::squish(d);
-        paramValues[3] = reinterpret_cast<const char*>(d.data());
-//        paramValues[3] = reinterpret_cast<const char*>(img->getData().data());
+//        auto d = img->getData();
+//        NJLIC::squish(d);
+//        paramValues[3] = reinterpret_cast<const char*>(d.data());
+        paramValues[3] = reinterpret_cast<const char*>(img->getData().data());
         paramLengths[3] = img->getData().size();
         paramValues[4] = project_id_str.c_str();
 
