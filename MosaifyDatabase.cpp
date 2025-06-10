@@ -528,6 +528,39 @@ namespace NJLIC {
         return true;
     }
 
+    static bool readUser(PGconn* conn, const std::string& email, int &id, std::string &error_message) {
+
+        // Prepare the query with parameterized input to prevent SQL injection
+        const char* sql = "SELECT id FROM usertable WHERE email = $1";
+        const char* paramValues[1] = { email.c_str() };
+
+        // Execute the sql
+        PGresult* res = PQexecParams(conn,
+                                     sql,
+                                     1,          // number of parameters
+                                     nullptr,    // parameter types (let PostgreSQL infer)
+                                     paramValues,
+                                     nullptr,    // parameter lengths
+                                     nullptr,    // parameter formats
+                                     0);         // result format (text)
+
+        if (PQresultStatus(res) != PGRES_TUPLES_OK) {
+            error_message = HANDLE_ERROR(conn, "Get User", sql);
+            PQclear(res);
+            return false; // Return an empty vector on error
+        }
+
+        // Check if we got a result
+        if (PQntuples(res) > 0) {
+            // Get the ID from the first row, first column
+            char* idStr = PQgetvalue(res, 0, 0);
+            id = std::stoi(idStr);
+        }
+
+        PQclear(res);
+        return true;
+    }
+
     static bool readUser(PGconn *conn, int user_id, std::string& email, std::string& first_name, std::string& last_name, std::string &error_message) {
         const char* sql = "SELECT email, first_name, last_name FROM usertable WHERE id = $1";
         std::string user_id_str = std::to_string(user_id);
@@ -976,9 +1009,9 @@ namespace NJLIC {
 
         // SQL statement to create the user table
         const char* createUserTableSQL = R"(
-            CREATE TABLE IF NOT EXISTS usertable (
+             CREATE TABLE IF NOT EXISTS usertable (
                 id SERIAL PRIMARY KEY,
-                email VARCHAR(255) NOT NULL,
+                email VARCHAR(255) NOT NULL UNIQUE,
                 first_name VARCHAR(255) NOT NULL,
                 last_name VARCHAR(255) NOT NULL
             );
@@ -1123,6 +1156,11 @@ namespace NJLIC {
 
     bool MosaifyDatabase::createUser(const std::string& email, const std::string& first_name, const std::string& last_name, int &user_id, std::string &error_message) {
         return NJLIC::createUser(m_conn, email, first_name, last_name, user_id, error_message);
+    }
+
+//    static bool readUser(PGconn* conn, const std::string& email, int &id, std::string &error_message) {
+    bool MosaifyDatabase::readUser(const std::string& email, int &id, std::string &error_message) {
+        return NJLIC::readUser(m_conn, email, id, error_message);
     }
 
     bool MosaifyDatabase::readUser(int user_id, std::string& email, std::string& first_name, std::string& last_name, std::string &error_message) {

@@ -48,6 +48,7 @@ namespace NJLIC {
         bool readImages(int project_id, std::vector<std::unique_ptr<IImageData>>& images, const std::function<std::unique_ptr<IImageData>()>& createImageFunc, std::vector<int> &image_ids, std::string &error_message);
 
         bool createUser(const std::string& email, const std::string& first_name, const std::string& last_name, int &user_id, std::string &error_message);
+        bool readUser(const std::string& email, int &id, std::string &error_message);
         bool readUser(int user_id, std::string& email, std::string& first_name, std::string& last_name, std::string &error_message);
         bool updateUser(int user_id, const std::string& new_email, const std::string& new_first_name, const std::string& new_last_name, std::string &error_message);
         bool deleteUser(int user_id, std::string &error_message);
