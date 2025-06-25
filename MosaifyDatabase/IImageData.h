@@ -19,7 +19,7 @@ namespace NJLIC {
         virtual int getRows() const = 0;
         virtual int getCols() const = 0;
         virtual int getComps() const = 0;
-        virtual const std::vector<unsigned char>& getData() const = 0;
+        virtual const std::vector<unsigned char>& getData() = 0;
         virtual size_t getId() const = 0;
 
         // Setters
