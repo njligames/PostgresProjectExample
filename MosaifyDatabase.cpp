@@ -11,6 +11,7 @@
 #include <cstring>
 #include <libpq-fe.h>
 #include <zlib.h>
+#include <arpa/inet.h>
 
 namespace NJLIC {
 
