@@ -6,6 +6,7 @@
 //#include <libpq-fe.h>
 #include <vector>
 #include <functional>
+#include <memory>
 
 #ifndef MYPROJECT_DATABASE_H
 #define MYPROJECT_DATABASE_H
