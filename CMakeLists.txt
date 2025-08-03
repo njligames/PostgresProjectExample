@@ -46,8 +46,8 @@ if(BUILD_EXECUTABLE)
 endif()
 
 install(FILES
-        ${CMAKE_SOURCE_DIR}/MosaifyDatabase/MosaifyDatabase.h
-        ${CMAKE_SOURCE_DIR}/MosaifyDatabase/IImageData.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/MosaifyDatabase/MosaifyDatabase.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/MosaifyDatabase/IImageData.h
         DESTINATION MosaifyDatabase/include/MosaifyDatabase)
 
 install(TARGETS MosaifyDB
