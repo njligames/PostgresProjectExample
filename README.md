@@ -1,5 +1,6 @@
 # PostgreSQL Example Project
-
+[![MacOS](https://github.com/njligames/PostgresProjectExample/actions/workflows/macos-platform.yml/badge.svg)](https://github.com/njligames/PostgresProjectExample/actions/workflows/macos-platform.yml)
+[![Ubuntu](https://github.com/njligames/PostgresProjectExample/actions/workflows/ubuntu-platform.yml/badge.svg)](https://github.com/njligames/PostgresProjectExample/actions/workflows/ubuntu-platform.yml)
 ## VERSION
 v1.0.0 - Initial MVP. 
 v1.0.1 - Added mosaic result table. 
