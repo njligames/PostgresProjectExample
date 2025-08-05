@@ -54,6 +54,12 @@ jobs:
       - name: Install
         run: cmake --install build
 
+      - name: Extract version from CMakeLists.txt
+        id: version
+        run: |
+          VERSION=$(sed -nE 's/^project\([^)]*VERSION[[:space:]]+([0-9]+\.[0-9]+\.[0-9]+).*/\1/p' CMakeLists.txt)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
       - name: Upload install artifact
         uses: actions/upload-artifact@v4
         with:
